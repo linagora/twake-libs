@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./uri-templates": {
+      "types": "./dist/uriTemplates/index.d.ts",
+      "import": "./dist/uriTemplates/index.js"
     }
   },
   "files": [
