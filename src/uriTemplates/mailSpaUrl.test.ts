@@ -1,4 +1,8 @@
-import { resolveMailSpaUrl, buildMailComposerUrl } from './mailSpaUrl'
+import {
+  resolveMailSpaUrl,
+  buildMailComposerUrl,
+  generateMailComposerUrl
+} from './mailSpaUrl'
 
 describe('resolveMailSpaUrl', () => {
   it('resolves a plain URL template', () => {
@@ -27,5 +31,23 @@ describe('buildMailComposerUrl', () => {
     expect(result).toBe(
       'https://mail.example.com/mailto/?uri=mailto%3Abob%40example.com'
     )
+  })
+})
+
+describe('generateMailComposerUrl', () => {
+  it('generates a complete composer URL from template', () => {
+    const result = generateMailComposerUrl(
+      'https://mail.{workplaceFqdn}',
+      'bob@example.com',
+      { workplaceFqdn: 'alice.twake.app' }
+    )
+    expect(result).toBe(
+      'https://mail.alice.twake.app/mailto/?uri=mailto%3Abob%40example.com'
+    )
+  })
+
+  it('returns null for an empty template', () => {
+    const result = generateMailComposerUrl('', 'bob@example.com', {})
+    expect(result).toBeNull()
   })
 })

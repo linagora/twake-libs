@@ -5,12 +5,14 @@ export {
 
 export {
   resolveMailSpaUrl,
-  buildMailComposerUrl
+  buildMailComposerUrl,
+  generateMailComposerUrl
 } from './uriTemplates/mailSpaUrl'
 
 export { resolveChatSpaUrl } from './uriTemplates/chatSpaUrl'
 
 export {
   resolveCalendarSpaUrl,
-  buildCalendarEventUrl
+  buildCalendarEventUrl,
+  generateCalendarEventUrl
 } from './uriTemplates/calendarSpaUrl'

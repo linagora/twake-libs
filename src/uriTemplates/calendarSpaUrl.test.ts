@@ -1,4 +1,8 @@
-import { resolveCalendarSpaUrl, buildCalendarEventUrl } from './calendarSpaUrl'
+import {
+  resolveCalendarSpaUrl,
+  buildCalendarEventUrl,
+  generateCalendarEventUrl
+} from './calendarSpaUrl'
 
 describe('resolveCalendarSpaUrl', () => {
   it('resolves a plain URL template', () => {
@@ -27,5 +31,23 @@ describe('buildCalendarEventUrl', () => {
     expect(result).toBe(
       'https://calendar.example.com/newEvent?attendee=bob%40example.com'
     )
+  })
+})
+
+describe('generateCalendarEventUrl', () => {
+  it('generates a complete event URL from template', () => {
+    const result = generateCalendarEventUrl(
+      'https://calendar.{workplaceFqdn}',
+      'bob@example.com',
+      { workplaceFqdn: 'alice.twake.app' }
+    )
+    expect(result).toBe(
+      'https://calendar.alice.twake.app/newEvent?attendee=bob%40example.com'
+    )
+  })
+
+  it('returns null for an empty template', () => {
+    const result = generateCalendarEventUrl('', 'bob@example.com', {})
+    expect(result).toBeNull()
   })
 })

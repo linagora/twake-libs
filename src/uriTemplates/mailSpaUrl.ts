@@ -32,3 +32,24 @@ export function buildMailComposerUrl(
 ): string {
   return `${mailSpaUrl}/mailto/?uri=${encodeURIComponent(`mailto:${recipient}`)}`
 }
+
+/**
+ * Generate a complete mail composer URL from a template.
+ *
+ * Combines template resolution and composer URL building into a single call.
+ *
+ * @param template - The URL template (e.g. 'https://mail.{workplaceFqdn}')
+ * @param recipient - The recipient email address
+ * @param context - Optional context for template resolution
+ * @returns The full composer URL, or null if template is empty
+ */
+export function generateMailComposerUrl(
+  template: string,
+  recipient: string,
+  context: UriTemplateContext = {}
+): string | null {
+  const mailSpaUrl = resolveMailSpaUrl(template, context)
+  if (!mailSpaUrl) return null
+
+  return buildMailComposerUrl(mailSpaUrl, recipient)
+}

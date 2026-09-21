@@ -1,7 +1,15 @@
 export { resolveUriTemplate, type UriTemplateContext } from './uriTemplateUtils'
 
-export { resolveMailSpaUrl, buildMailComposerUrl } from './mailSpaUrl'
+export {
+  resolveMailSpaUrl,
+  buildMailComposerUrl,
+  generateMailComposerUrl
+} from './mailSpaUrl'
 
 export { resolveChatSpaUrl } from './chatSpaUrl'
 
-export { resolveCalendarSpaUrl, buildCalendarEventUrl } from './calendarSpaUrl'
+export {
+  resolveCalendarSpaUrl,
+  buildCalendarEventUrl,
+  generateCalendarEventUrl
+} from './calendarSpaUrl'

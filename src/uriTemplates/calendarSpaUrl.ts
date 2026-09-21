@@ -32,3 +32,24 @@ export function buildCalendarEventUrl(
 ): string {
   return `${calendarSpaUrl}/newEvent?attendee=${encodeURIComponent(attendee)}`
 }
+
+/**
+ * Generate a complete calendar event creation URL from a template.
+ *
+ * Combines template resolution and event URL building into a single call.
+ *
+ * @param template - The URL template (e.g. 'https://calendar.{workplaceFqdn}')
+ * @param attendee - The attendee email address
+ * @param context - Optional context for template resolution
+ * @returns The full event creation URL, or null if template is empty
+ */
+export function generateCalendarEventUrl(
+  template: string,
+  attendee: string,
+  context: UriTemplateContext = {}
+): string | null {
+  const calendarSpaUrl = resolveCalendarSpaUrl(template, context)
+  if (!calendarSpaUrl) return null
+
+  return buildCalendarEventUrl(calendarSpaUrl, attendee)
+}
