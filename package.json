@@ -1,0 +1,47 @@
+{
+  "name": "twake-libs",
+  "private": true,
+  "description": "Twake Libs monorepo - Shared libs for Twake applications",
+  "author": "Twake",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linagora/twake-libs.git"
+  },
+  "engines": {
+    "node": "24.x",
+    "npm": ">=9.0.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint --workspaces --if-present -- --fix",
+    "clean": "npm run clean --workspaces && rm -rf node_modules",
+    "release": "multi-semantic-release --deps.bump=ignore",
+    "release:dry": "multi-semantic-release --deps.bump=ignore --dry-run"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.0.2",
+    "@commitlint/config-conventional": "21.0.2",
+    "@semantic-release/changelog": "6.0.3",
+    "@semantic-release/git": "10.0.1",
+    "multi-semantic-release": "3.1.0",
+    "typescript": "5.5.2"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "subject-case": [
+        2,
+        "always",
+        "sentence-case"
+      ]
+    }
+  }
+}

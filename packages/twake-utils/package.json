@@ -1,0 +1,46 @@
+{
+  "name": "@linagora/twake-utils",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Utils for Twake applications",
+  "author": "Twake",
+  "license": "MIT",
+  "engines": {
+    "node": "24.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linagora/twake-libs.git",
+    "directory": "packages/twake-utils"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "tsc -p tsconfig.build.json --watch",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "cozy-tsconfig": "^2.0.0",
+    "eslint": "10.2.1",
+    "eslint-config-cozy-app": "7.0.0",
+    "vitest": "5.0.1"
+  }
+}
