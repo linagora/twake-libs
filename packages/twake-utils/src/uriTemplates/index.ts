@@ -2,6 +2,7 @@ export { resolveUriTemplate, type UriTemplateContext } from './uriTemplateUtils'
 
 export {
   resolveMailSpaUrl,
+  buildMailtoUri,
   buildMailComposerUrl,
   generateMailComposerUrl
 } from './mailSpaUrl'
