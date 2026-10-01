@@ -13,3 +13,4 @@ export {
   buildCalendarEventUrl,
   generateCalendarEventUrl
 } from './uriTemplates/calendarSpaUrl'
+export { encodeDavSegment } from './davUtils'
