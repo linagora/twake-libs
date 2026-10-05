@@ -7,6 +7,7 @@ Monorepo containing shared libs packages for Twake applications.
 ```
 twake-libs/
 ├── packages/
+│   ├── twake-oidc/         # SSO sign-in and session
 │   ├── twake-utils/        # Shared utils
 │   └── ...                 # Other packages (to be added)
 ├── package.json            # Root workspace config
