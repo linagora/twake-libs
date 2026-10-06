@@ -41,6 +41,9 @@ const APPS = {
   ]
 }
 
+const flags = (values: Record<string, unknown>): Response =>
+  json({ data: { id: 'flags', type: 'io.cozy.settings', attributes: values } })
+
 const loggedIn = async (
   routes: Parameters<typeof stubFetch>[0] = {}
 ): Promise<{ sdk: Sdk; fetchMock: ReturnType<typeof stubFetch> }> => {
@@ -151,5 +154,89 @@ describe('fetch', () => {
     await expect(sdk.fetchJSON('/apps/')).rejects.toEqual(
       new SdkError('/apps/', 500)
     )
+  })
+})
+
+describe('platform data', () => {
+  it('lists the apps without the hidden ones, once', async () => {
+    const { sdk, fetchMock } = await loggedIn({
+      '/apps/': () => json(APPS),
+      '/settings/flags': () => flags({ 'apps.hidden': ['hidden'] })
+    })
+
+    const apps = await sdk.getApps()
+    await sdk.getApps()
+
+    expect(apps.map(app => app.slug)).toEqual(['home', 'calendar'])
+    expect(apps[0]).toMatchObject({
+      id: 'io.cozy.apps/home',
+      name: 'Home',
+      links: { related: 'https://alice-home.twake.example/' }
+    })
+    expect(requestsTo(fetchMock, '/apps/')).toHaveLength(1)
+  })
+
+  it('merges the instance with its disk usage as numbers', async () => {
+    const { sdk } = await loggedIn({
+      '/settings/instance': () =>
+        json({
+          data: {
+            id: 'io.cozy.settings.instance',
+            type: 'io.cozy.settings',
+            attributes: { email: 'alice@example.com', public_name: 'Alice' }
+          }
+        }),
+      '/settings/disk-usage': () =>
+        json({
+          data: {
+            id: 'io.cozy.settings.disk-usage',
+            type: 'io.cozy.settings',
+            attributes: { used: '1024', quota: '2048' }
+          }
+        })
+    })
+
+    await expect(sdk.getInstance()).resolves.toEqual({
+      email: 'alice@example.com',
+      public_name: 'Alice',
+      diskUsage: 1024,
+      diskQuota: 2048
+    })
+  })
+
+  it('resolves the shortcuts of the Home folder, none without the folder', async () => {
+    const { sdk } = await loggedIn({
+      '/files/metadata': () =>
+        json({
+          data: { id: 'home-dir', type: 'io.cozy.files', attributes: {} },
+          included: [
+            {
+              id: 'shortcut-1',
+              type: 'io.cozy.files',
+              attributes: { name: 'Docs.url', class: 'shortcut' }
+            },
+            {
+              id: 'note-1',
+              type: 'io.cozy.files',
+              attributes: { name: 'Note.md', class: 'text' }
+            }
+          ]
+        }),
+      '/shortcuts/shortcut-1': () =>
+        json({
+          data: {
+            id: 'shortcut-1',
+            type: 'io.cozy.files.shortcuts',
+            attributes: { name: 'Docs.url', url: 'https://docs.example' }
+          }
+        })
+    })
+
+    await expect(sdk.getShortcuts()).resolves.toEqual([
+      { id: 'shortcut-1', name: 'Docs.url', url: 'https://docs.example' }
+    ])
+
+    const { sdk: withoutHome } = await loggedIn({})
+    await expect(withoutHome.getShortcuts()).resolves.toEqual([])
   })
 })
