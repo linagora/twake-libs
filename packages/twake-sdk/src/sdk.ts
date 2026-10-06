@@ -4,6 +4,8 @@ import type {
   Credentials,
   Flags,
   Instance,
+  Intent,
+  IntentRequest,
   SdkOptions,
   SdkStatus,
   Shortcut
@@ -13,6 +15,7 @@ import type {
 export const WAITING_TIMEOUT = 30000
 
 const HOME_SHORTCUTS_PATH = '/Settings/Home'
+const STANDALONE_APPS_FLAG = 'apps.enable-standalone-apps'
 const HIDDEN_APPS_FLAG = 'apps.hidden'
 
 export class SdkError extends Error {
@@ -39,12 +42,20 @@ export interface Sdk {
   fetchJSON<T>(path: string, init?: RequestInit): Promise<T>
   /** Installed apps, without the ones hidden by the `apps.hidden` flag */
   getApps(): Promise<App[]>
+  /** Installed apps, hidden ones included */
+  getAllApps(): Promise<App[]>
   getInstance(): Promise<Instance>
   getFlags(): Promise<Flags>
   /** Shortcuts of the Home folder */
   getShortcuts(): Promise<Shortcut[]>
   /** Blob URL of the app icon, revoked by `logout` */
   getAppIconURL(slug: string): Promise<string>
+  /**
+   * URL of an installed app, hidden or not, null otherwise. Standalone apps
+   * open at their client URL
+   */
+  getAppURL(slug: string, path?: string): Promise<string | null>
+  createIntent(request: IntentRequest): Promise<Intent>
 }
 
 interface JsonApiDoc<A> {
@@ -68,6 +79,9 @@ interface DiskUsageAttributes {
   used: string
   quota?: string
 }
+
+const isHttpURL = (value: unknown): value is string =>
+  typeof value === 'string' && /^https?:\/\//.test(value)
 
 const flatten = <A extends object>(
   doc: JsonApiDoc<A>
@@ -193,16 +207,19 @@ export function createSdk(options: SdkOptions): Sdk {
       return data.attributes
     })
 
-  const getApps = (): Promise<App[]> =>
+  const getAllApps = (): Promise<App[]> =>
     cached('/apps/', async () => {
-      const [{ data }, flags] = await Promise.all([
-        fetchJSON<JsonApiResponse<JsonApiDoc<App>[]>>('/apps/'),
-        getFlags()
-      ])
-      const hidden = flags[HIDDEN_APPS_FLAG]
-      const hiddenSlugs = Array.isArray(hidden) ? hidden : []
-      return data.map(flatten).filter(app => !hiddenSlugs.includes(app.slug))
+      const { data } =
+        await fetchJSON<JsonApiResponse<JsonApiDoc<App>[]>>('/apps/')
+      return data.map(flatten)
     })
+
+  const getApps = async (): Promise<App[]> => {
+    const [apps, flags] = await Promise.all([getAllApps(), getFlags()])
+    const hidden = flags[HIDDEN_APPS_FLAG]
+    const hiddenSlugs = Array.isArray(hidden) ? hidden : []
+    return apps.filter(app => !hiddenSlugs.includes(app.slug))
+  }
 
   const getInstance = (): Promise<Instance> =>
     cached('/settings/instance', async () => {
@@ -265,6 +282,40 @@ export function createSdk(options: SdkOptions): Sdk {
     return pending
   }
 
+  const getAppURL = async (slug: string, path = ''): Promise<string | null> => {
+    const [apps, flags] = await Promise.all([getAllApps(), getFlags()])
+    const app = apps.find(candidate => candidate.slug === slug)
+    if (!app) return null
+    let base = app.links.related
+    if (
+      app.standalone === true &&
+      app.client_url_flag &&
+      flags[STANDALONE_APPS_FLAG]
+    ) {
+      const clientURL = flags[app.client_url_flag]
+      if (isHttpURL(clientURL)) base = clientURL
+    }
+    if (!base) return null
+    return `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
+  }
+
+  const createIntent = async (request: IntentRequest): Promise<Intent> => {
+    const { data } = await fetchJSON<JsonApiResponse<JsonApiDoc<Intent>>>(
+      '/intents',
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/vnd.api+json',
+          'Content-Type': 'application/vnd.api+json'
+        },
+        body: JSON.stringify({
+          data: { type: 'io.cozy.intents', attributes: request }
+        })
+      }
+    )
+    return flatten(data)
+  }
+
   setStatus('waiting')
   if (options.idToken) login(options.idToken).catch(() => null)
 
@@ -282,9 +333,12 @@ export function createSdk(options: SdkOptions): Sdk {
     fetch: sdkFetch,
     fetchJSON,
     getApps,
+    getAllApps,
     getInstance,
     getFlags,
     getShortcuts,
-    getAppIconURL
+    getAppIconURL,
+    getAppURL,
+    createIntent
   }
 }

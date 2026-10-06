@@ -46,6 +46,8 @@ const instance = await sdk.getInstance() // email, public_name, diskUsage, diskQ
 const flags = await sdk.getFlags()
 const shortcuts = await sdk.getShortcuts() // Home shortcuts
 const icon = await sdk.getAppIconURL('drive') // blob URL, revoked by logout
+const settings = await sdk.getAppURL('settings', '#/profile') // client URL for standalone apps
+const intent = await sdk.createIntent({ action: 'PICK', type: 'io.cozy.files' })
 ```
 
 Tokens stay in memory: a reload exchanges the id token again.

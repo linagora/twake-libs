@@ -67,3 +67,18 @@ export interface Shortcut {
   name: string
   url: string
 }
+
+export interface IntentRequest {
+  action: string
+  type: string
+  data?: unknown
+  permissions?: string[]
+}
+
+export interface Intent {
+  id: string
+  action: string
+  type: string
+  services: { slug: string; href: string }[]
+  [attribute: string]: unknown
+}
