@@ -5,6 +5,7 @@ import {
   CREDENTIALS,
   PLATFORM_URL,
   authorizationOf,
+  bodyOf,
   json,
   requestsTo,
   stubFetch
@@ -238,5 +239,91 @@ describe('platform data', () => {
 
     const { sdk: withoutHome } = await loggedIn({})
     await expect(withoutHome.getShortcuts()).resolves.toEqual([])
+  })
+
+  it('creates an intent and returns its services', async () => {
+    const { sdk, fetchMock } = await loggedIn({
+      '/intents': () =>
+        json({
+          data: {
+            id: 'intent-1',
+            type: 'io.cozy.intents',
+            attributes: {
+              action: 'PICK',
+              type: 'io.cozy.files',
+              services: [{ slug: 'drive', href: 'https://drive/pick' }]
+            }
+          }
+        })
+    })
+
+    const intent = await sdk.createIntent({
+      action: 'PICK',
+      type: 'io.cozy.files'
+    })
+
+    expect(intent).toMatchObject({
+      id: 'intent-1',
+      services: [{ slug: 'drive', href: 'https://drive/pick' }]
+    })
+    const [init] = requestsTo(fetchMock, '/intents')
+    expect(bodyOf(init)).toEqual({
+      data: {
+        type: 'io.cozy.intents',
+        attributes: { action: 'PICK', type: 'io.cozy.files' }
+      }
+    })
+  })
+})
+
+describe('getAppURL', () => {
+  it('opens a standalone app at its client URL when the flag allows it', async () => {
+    const { sdk } = await loggedIn({
+      '/apps/': () => json(APPS),
+      '/settings/flags': () =>
+        flags({
+          'apps.enable-standalone-apps': true,
+          'calendar.client-url': 'https://calendar.twake.example'
+        })
+    })
+
+    await expect(sdk.getAppURL('calendar', '/#/settings')).resolves.toBe(
+      'https://calendar.twake.example/#/settings'
+    )
+    await expect(sdk.getAppURL('home')).resolves.toBe(
+      'https://alice-home.twake.example/'
+    )
+  })
+
+  it('keeps the platform URL when standalone apps are disabled or the flag is not a URL', async () => {
+    const { sdk } = await loggedIn({
+      '/apps/': () => json(APPS),
+      '/settings/flags': () => flags({ 'calendar.client-url': 'not a url' })
+    })
+
+    await expect(sdk.getAppURL('calendar')).resolves.toBe(
+      'https://alice-calendar.twake.example/'
+    )
+    await expect(sdk.getAppURL('missing')).resolves.toBeNull()
+  })
+
+  it('resolves the URL of a hidden app', async () => {
+    const { sdk } = await loggedIn({
+      '/apps/': () =>
+        json({
+          data: [
+            {
+              ...APPS.data[2],
+              links: { related: 'https://alice-hidden.twake.example/' }
+            }
+          ]
+        }),
+      '/settings/flags': () => flags({ 'apps.hidden': ['hidden'] })
+    })
+
+    await expect(sdk.getApps()).resolves.toEqual([])
+    await expect(sdk.getAppURL('hidden')).resolves.toBe(
+      'https://alice-hidden.twake.example/'
+    )
   })
 })
