@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { getAppDisplayName, getEntrypoints, sortApps } from './helpers'
+import {
+  formatAvailableGigabytes,
+  getAppDisplayName,
+  getEntrypoints,
+  sortApps
+} from './helpers'
 import { makeApp } from './testUtils'
 
 describe('getAppDisplayName', () => {
@@ -61,5 +66,13 @@ describe('getEntrypoints', () => {
         e => e.slug + '/' + e.name
       )
     ).toEqual(['contacts/groups', 'contacts/beta'])
+  })
+})
+
+describe('formatAvailableGigabytes', () => {
+  it('rounds to two decimals and assumes 100 GB without a quota', () => {
+    expect(formatAvailableGigabytes(25e9, 100e9)).toBe('75')
+    expect(formatAvailableGigabytes(1.5e9, 5e9)).toBe('3.50')
+    expect(formatAvailableGigabytes(40e9, null)).toBe('60')
   })
 })

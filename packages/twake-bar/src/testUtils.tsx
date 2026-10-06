@@ -2,7 +2,7 @@ import { TwakeMuiThemeProvider } from '@linagora/twake-mui'
 import type { App, Instance, Sdk, SdkStatus } from '@linagora/twake-sdk'
 import { render, type RenderResult } from '@testing-library/react'
 import React from 'react'
-import { vi } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
 
 import { I18n } from 'twake-i18n'
 
@@ -90,3 +90,17 @@ export const renderWithSdk = (ui: React.ReactElement, sdk: Sdk): RenderResult =>
       </I18n>
     </TwakeMuiThemeProvider>
   )
+
+/** Makes MUI breakpoints see a phone: `down(...)` media queries match */
+export const useMobileViewport = (): void => {
+  const desktop = window.matchMedia
+  beforeEach(() => {
+    window.matchMedia = (query: string): MediaQueryList => ({
+      ...desktop(query),
+      matches: query.includes('max-width')
+    })
+  })
+  afterEach(() => {
+    window.matchMedia = desktop
+  })
+}

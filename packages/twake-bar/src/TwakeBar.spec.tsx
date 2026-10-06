@@ -1,9 +1,10 @@
 import { act, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import React from 'react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { TwakeBar } from './TwakeBar'
-import { makeApp, makeSdk, renderWithSdk } from './testUtils'
+import { INSTANCE, makeApp, makeSdk, renderWithSdk } from './testUtils'
 
 const APP = { slug: 'calendar', name: 'Calendar', icon: 'https://cal/icon.svg' }
 
@@ -11,7 +12,7 @@ const renderBar = (
   sdk = makeSdk(),
   props: Partial<React.ComponentProps<typeof TwakeBar>> = {}
 ): ReturnType<typeof renderWithSdk> =>
-  renderWithSdk(<TwakeBar app={APP} {...props} />, sdk)
+  renderWithSdk(<TwakeBar app={APP} onLogOut={vi.fn()} {...props} />, sdk)
 
 describe('TwakeBar', () => {
   it('shows an avatar skeleton and no menu while waiting for credentials', () => {
@@ -20,6 +21,7 @@ describe('TwakeBar', () => {
     expect(
       screen.queryByTestId('twake-bar-avatar-skeleton')
     ).toBeInTheDocument()
+    expect(screen.queryByTestId('twake-bar-user-button')).toBe(null)
     expect(screen.queryByTestId('twake-bar-apps-button')).toBe(null)
   })
 
@@ -27,13 +29,15 @@ describe('TwakeBar', () => {
     renderBar(makeSdk({ status: 'public' }))
 
     expect(screen.queryByTestId('twake-bar-avatar-skeleton')).toBe(null)
+    expect(screen.queryByTestId('twake-bar-user-button')).toBe(null)
     expect(screen.queryByTestId('twake-bar-home')).toBeInTheDocument()
   })
 
-  it('shows the apps menu once the client is ready', async () => {
+  it('shows the menus once the client is ready', async () => {
     const sdk = makeSdk({
       status: 'waiting',
-      apps: [makeApp({ slug: 'home' })]
+      apps: [makeApp({ slug: 'home' })],
+      context: { help_link: 'https://help.example' }
     })
     renderBar(sdk)
 
@@ -41,6 +45,10 @@ describe('TwakeBar', () => {
 
     expect(screen.queryByTestId('twake-bar-apps-button')).toBeInTheDocument()
     expect(screen.queryByTestId('twake-bar-avatar-skeleton')).toBe(null)
+    expect(await screen.findByRole('link', { name: 'Help' })).toHaveAttribute(
+      'href',
+      'https://help.example'
+    )
     await waitFor(() =>
       expect(screen.getByTestId('twake-bar-home')).toHaveAttribute(
         'href',
@@ -54,5 +62,18 @@ describe('TwakeBar', () => {
 
     expect(screen.queryByText('Custom left')).toBeInTheDocument()
     expect(screen.queryByTestId('twake-bar-home')).toBe(null)
+  })
+
+  it('hands the logout to the host', async () => {
+    const onLogOut = vi.fn()
+    const user = userEvent.setup()
+    renderBar(makeSdk({ instance: INSTANCE }), { onLogOut })
+
+    const button = screen.getByTestId('twake-bar-user-button')
+    await waitFor(() => expect(button).toBeEnabled())
+    await user.click(button)
+    await user.click(await screen.findByTestId('twake-bar-logout'))
+
+    expect(onLogOut).toHaveBeenCalledTimes(1)
   })
 })

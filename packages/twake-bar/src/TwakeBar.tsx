@@ -3,7 +3,9 @@ import React from 'react'
 
 import { AppsMenu } from './AppsMenu'
 import { BarLeft, type BarApp } from './BarLeft'
+import { HelpLink } from './HelpLink'
 import { useSdkStatus } from './SdkProvider'
+import { UserMenu } from './UserMenu'
 import { useBarLocales } from './useBarLocales'
 
 export const TWAKE_BAR_HEIGHT = '3rem'
@@ -20,7 +22,10 @@ export interface TwakeBarSlots {
 
 export interface TwakeBarProps {
   app: BarApp
+  /** Called by the log out item: the host owns the logout */
+  onLogOut: () => void
   slots?: TwakeBarSlots
+  showEmailDomainChip?: boolean
 }
 
 const Root = styled('header')(({ theme }) => ({
@@ -49,13 +54,15 @@ const Right = styled('div')(({ theme }) => ({
 }))
 
 /**
- * The top bar of the platform: home button, app title and apps menu. Logged
- * out when the client is `public`, with an avatar skeleton while it is
- * `waiting`.
+ * The top bar of the platform: home button, app title, help, apps menu and
+ * user menu. Logged out when the client is `public`, with an avatar skeleton
+ * while it is `waiting`.
  */
 export const TwakeBar = ({
   app,
-  slots = {}
+  onLogOut,
+  slots = {},
+  showEmailDomainChip
 }: TwakeBarProps): React.ReactElement => {
   useBarLocales()
   const status = useSdkStatus()
@@ -77,7 +84,12 @@ export const TwakeBar = ({
       )}
       {status === 'ready' && (
         <Right>
+          <HelpLink />
           <AppsMenu />
+          <UserMenu
+            onLogOut={onLogOut}
+            showEmailDomainChip={showEmailDomainChip}
+          />
         </Right>
       )}
     </Root>
