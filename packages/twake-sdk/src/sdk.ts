@@ -1,6 +1,7 @@
 import { exchangeIdToken, refreshCredentials } from './auth'
 import type {
   App,
+  Context,
   Credentials,
   Flags,
   Instance,
@@ -45,6 +46,7 @@ export interface Sdk {
   /** Installed apps, hidden ones included */
   getAllApps(): Promise<App[]>
   getInstance(): Promise<Instance>
+  getContext(): Promise<Context>
   getFlags(): Promise<Flags>
   /** Shortcuts of the Home folder */
   getShortcuts(): Promise<Shortcut[]>
@@ -65,14 +67,26 @@ interface JsonApiDoc<A> {
   links?: Record<string, string>
 }
 
-interface JsonApiResponse<D> {
+interface JsonApiResponse<D, I = Record<string, unknown>> {
   data: D
-  included?: JsonApiDoc<Record<string, unknown>>[]
+  included?: JsonApiDoc<I>[]
 }
 
 interface FileAttributes {
   name: string
   class?: string
+  metadata?: { icon?: string; iconMimeType?: string }
+}
+
+/**
+ * Without an icon mime type the icon is a plain SVG, otherwise it comes from
+ * the Iconizer API already in base64
+ */
+const shortcutIcon = ({ metadata }: FileAttributes): string | null => {
+  if (!metadata?.icon) return null
+  return metadata.iconMimeType
+    ? `data:${metadata.iconMimeType};base64,${metadata.icon}`
+    : `data:image/svg+xml;base64,${btoa(metadata.icon)}`
 }
 
 interface DiskUsageAttributes {
@@ -239,13 +253,24 @@ export function createSdk(options: SdkOptions): Sdk {
       }
     })
 
+  const getContext = (): Promise<Context> =>
+    cached('/settings/context', async () => {
+      const { data } =
+        await fetchJSON<JsonApiResponse<JsonApiDoc<Context>>>(
+          '/settings/context'
+        )
+      return data.attributes
+    })
+
   const getShortcuts = (): Promise<Shortcut[]> =>
     cached('/shortcuts', async () => {
       const path = `/files/metadata?Path=${encodeURIComponent(HOME_SHORTCUTS_PATH)}`
-      let included: JsonApiDoc<Record<string, unknown>>[]
+      let included: JsonApiDoc<FileAttributes>[]
       try {
         ;({ included = [] } =
-          await fetchJSON<JsonApiResponse<JsonApiDoc<FileAttributes>>>(path))
+          await fetchJSON<
+            JsonApiResponse<JsonApiDoc<FileAttributes>, FileAttributes>
+          >(path))
       } catch (err: unknown) {
         // No Home folder yet: no shortcuts
         if (err instanceof SdkError && err.status === 404) return []
@@ -262,7 +287,8 @@ export function createSdk(options: SdkOptions): Sdk {
           return {
             id: file.id,
             name: data.attributes.name,
-            url: data.attributes.url
+            url: data.attributes.url,
+            icon: shortcutIcon(file.attributes)
           }
         })
       )
@@ -335,6 +361,7 @@ export function createSdk(options: SdkOptions): Sdk {
     getApps,
     getAllApps,
     getInstance,
+    getContext,
     getFlags,
     getShortcuts,
     getAppIconURL,

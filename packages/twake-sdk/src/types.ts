@@ -61,11 +61,20 @@ export interface Instance {
 
 export type Flags = Record<string, unknown>
 
+/** `GET /settings/context`: what the context configures for the instance */
+export interface Context {
+  help_link?: string
+  manager_url?: string
+  [attribute: string]: unknown
+}
+
 /** A shortcut file of the Home folder */
 export interface Shortcut {
   id: string
   name: string
   url: string
+  /** Data URL of the shortcut icon, null when it has none */
+  icon: string | null
 }
 
 export interface IntentRequest {
