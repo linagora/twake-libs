@@ -205,6 +205,23 @@ describe('platform data', () => {
     })
   })
 
+  it('reads the context of the instance', async () => {
+    const { sdk } = await loggedIn({
+      '/settings/context': () =>
+        json({
+          data: {
+            id: 'io.cozy.settings.context',
+            type: 'io.cozy.settings',
+            attributes: { help_link: 'https://help.example' }
+          }
+        })
+    })
+
+    await expect(sdk.getContext()).resolves.toEqual({
+      help_link: 'https://help.example'
+    })
+  })
+
   it('resolves the shortcuts of the Home folder, none without the folder', async () => {
     const { sdk } = await loggedIn({
       '/files/metadata': () =>
@@ -214,7 +231,11 @@ describe('platform data', () => {
             {
               id: 'shortcut-1',
               type: 'io.cozy.files',
-              attributes: { name: 'Docs.url', class: 'shortcut' }
+              attributes: {
+                name: 'Docs.url',
+                class: 'shortcut',
+                metadata: { icon: 'aWNvbg==', iconMimeType: 'image/png' }
+              }
             },
             {
               id: 'note-1',
@@ -234,7 +255,12 @@ describe('platform data', () => {
     })
 
     await expect(sdk.getShortcuts()).resolves.toEqual([
-      { id: 'shortcut-1', name: 'Docs.url', url: 'https://docs.example' }
+      {
+        id: 'shortcut-1',
+        name: 'Docs.url',
+        url: 'https://docs.example',
+        icon: 'data:image/png;base64,aWNvbg=='
+      }
     ])
 
     const { sdk: withoutHome } = await loggedIn({})
