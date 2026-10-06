@@ -35,3 +35,16 @@ export function getEntrypoints(apps: App[], flags: Flags): AppEntrypoint[] {
       .map(entrypoint => ({ ...entrypoint, slug: app.slug }))
   )
 }
+
+/** Quota assumed when the instance has none */
+const FALLBACK_QUOTA = 1e11
+
+/** Gigabytes left, with at most two decimals */
+export function formatAvailableGigabytes(
+  usage: number,
+  quota: number | null
+): string {
+  const available =
+    Math.round(((quota ?? FALLBACK_QUOTA) - usage) * 1e-9 * 100) / 100
+  return `${available % 1 ? available.toFixed(2) : available}`
+}
