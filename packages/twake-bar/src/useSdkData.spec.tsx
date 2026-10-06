@@ -1,5 +1,5 @@
 import type { Sdk } from '@linagora/twake-sdk'
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it } from 'vitest'
 
@@ -20,7 +20,7 @@ describe('useSdkData', () => {
     renderWithSdk(<Name />, sdk)
 
     expect(screen.queryByText('none')).toBeInTheDocument()
-    sdk.setStatus('ready')
+    act(() => sdk.setStatus('ready'))
 
     expect(await screen.findByText('Alice')).toBeInTheDocument()
   })

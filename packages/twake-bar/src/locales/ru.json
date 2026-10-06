@@ -1,0 +1,14 @@
+{
+  "twakeBar": {
+    "home": "Главная",
+    "apps": "Приложения",
+    "help": "Справка",
+    "userMenu": "Аккаунт",
+    "noApps": "Приложения не найдены.",
+    "manageProfile": "Управление профилем",
+    "storage": "Хранилище",
+    "gbAvailable": "ГБ доступно",
+    "emailDomainNotActive": "Электронная почта неактивна",
+    "logOut": "Выйти"
+  }
+}

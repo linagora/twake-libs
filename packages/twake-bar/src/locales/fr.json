@@ -1,0 +1,14 @@
+{
+  "twakeBar": {
+    "home": "Accueil",
+    "apps": "Applications",
+    "help": "Aide",
+    "userMenu": "Compte",
+    "noApps": "Pas d'applications trouvées.",
+    "manageProfile": "Gérer mon profil",
+    "storage": "Stockage",
+    "gbAvailable": "Go disponibles",
+    "emailDomainNotActive": "E-mail inactif",
+    "logOut": "Se déconnecter"
+  }
+}
