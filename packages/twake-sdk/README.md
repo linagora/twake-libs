@@ -38,6 +38,16 @@ const response = await sdk.fetch('/files/io.cozy.files.root-dir')
 const root = await sdk.fetchJSON<RootDir>('/files/io.cozy.files.root-dir')
 ```
 
+Platform data, loaded once per page:
+
+```ts
+const apps = await sdk.getApps() // without the apps hidden by the `apps.hidden` flag
+const instance = await sdk.getInstance() // email, public_name, diskUsage, diskQuota
+const flags = await sdk.getFlags()
+const shortcuts = await sdk.getShortcuts() // Home shortcuts
+const icon = await sdk.getAppIconURL('drive') // blob URL, revoked by logout
+```
+
 Tokens stay in memory: a reload exchanges the id token again.
 
 ## Platform requirements

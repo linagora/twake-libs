@@ -17,3 +17,53 @@ export interface Credentials {
   clientId: string
   clientSecret: string
 }
+
+/** An `io.cozy.apps` document, attributes and links flattened */
+export interface App {
+  id: string
+  slug: string
+  name: string
+  name_prefix?: string
+  state: string
+  standalone?: boolean
+  client_url_flag?: string
+  entrypoints?: Entrypoint[]
+  locales?: Record<string, { name?: string; name_prefix?: string }>
+  links: { related?: string; icon?: string }
+  [attribute: string]: unknown
+}
+
+export interface Entrypoint {
+  name: string
+  title: Record<string, string>
+  hash: string
+  icon?: string
+  conditions?: EntrypointCondition[]
+}
+
+export interface EntrypointCondition {
+  type: 'flag'
+  name: string
+  value: unknown
+}
+
+/** `GET /settings/instance` and `GET /settings/disk-usage`, merged */
+export interface Instance {
+  email?: string
+  public_name?: string
+  locale?: string
+  /** Bytes used, from disk-usage */
+  diskUsage: number
+  /** Bytes allowed, null when not limited */
+  diskQuota: number | null
+  [attribute: string]: unknown
+}
+
+export type Flags = Record<string, unknown>
+
+/** A shortcut file of the Home folder */
+export interface Shortcut {
+  id: string
+  name: string
+  url: string
+}
