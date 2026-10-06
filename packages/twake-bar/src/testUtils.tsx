@@ -67,6 +67,7 @@ export function makeSdk({
     fetch: vi.fn(),
     fetchJSON: vi.fn(),
     getApps,
+    getAllApps: getApps,
     getInstance: vi.fn(() => Promise.resolve(instance)),
     getContext: vi.fn(() => Promise.resolve(context)),
     getFlags,

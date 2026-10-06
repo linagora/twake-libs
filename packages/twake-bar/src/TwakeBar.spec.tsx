@@ -14,12 +14,13 @@ const renderBar = (
   renderWithSdk(<TwakeBar app={APP} {...props} />, sdk)
 
 describe('TwakeBar', () => {
-  it('shows an avatar skeleton while waiting for credentials', () => {
+  it('shows an avatar skeleton and no menu while waiting for credentials', () => {
     renderBar(makeSdk({ status: 'waiting' }))
 
     expect(
       screen.queryByTestId('twake-bar-avatar-skeleton')
     ).toBeInTheDocument()
+    expect(screen.queryByTestId('twake-bar-apps-button')).toBe(null)
   })
 
   it('shows logged out on a public page', () => {
@@ -29,7 +30,7 @@ describe('TwakeBar', () => {
     expect(screen.queryByTestId('twake-bar-home')).toBeInTheDocument()
   })
 
-  it('links the home button to the home app once the client is ready', async () => {
+  it('shows the apps menu once the client is ready', async () => {
     const sdk = makeSdk({
       status: 'waiting',
       apps: [makeApp({ slug: 'home' })]
@@ -38,6 +39,7 @@ describe('TwakeBar', () => {
 
     act(() => sdk.setStatus('ready'))
 
+    expect(screen.queryByTestId('twake-bar-apps-button')).toBeInTheDocument()
     expect(screen.queryByTestId('twake-bar-avatar-skeleton')).toBe(null)
     await waitFor(() =>
       expect(screen.getByTestId('twake-bar-home')).toHaveAttribute(
