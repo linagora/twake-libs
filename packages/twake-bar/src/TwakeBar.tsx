@@ -1,10 +1,10 @@
-import { Skeleton, styled } from '@linagora/twake-mui'
+import { Skeleton, styled, useBreakpoints } from '@linagora/twake-mui'
 import React from 'react'
 
+import { AppsMenu } from './AppsMenu'
 import { BarLeft, type BarApp } from './BarLeft'
 import { useSdkStatus } from './SdkProvider'
 import { useBarLocales } from './useBarLocales'
-import { useIsMobile } from './useIsMobile'
 
 export const TWAKE_BAR_HEIGHT = '3rem'
 
@@ -30,9 +30,8 @@ const Root = styled('header')(({ theme }) => ({
   width: '100%',
   height: TWAKE_BAR_HEIGHT,
   padding: '0 1.25rem 0 1rem',
-  // theme.vars exists once the host theme has cssVariables (twake-mui >= 10)
-  backgroundColor: (theme.vars || theme).palette.background.paper,
-  color: (theme.vars || theme).palette.text.primary,
+  backgroundColor: theme.vars.palette.background.paper,
+  color: theme.vars.palette.text.primary,
   [theme.breakpoints.down('md')]: {
     padding: '0 1rem 0 0'
   }
@@ -40,9 +39,19 @@ const Root = styled('header')(({ theme }) => ({
 
 const Grow = styled('div')({ flexGrow: 1 })
 
+// cozy-bar metrics: 8px padded icon buttons, the avatar 8px after them
+const Right = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  color: theme.vars.palette.text.secondary,
+  '& .MuiIconButton-root': { padding: 8, color: 'inherit' },
+  '& nav:last-child .MuiIconButton-root': { padding: 0, marginLeft: 8 }
+}))
+
 /**
- * The top bar of the platform: home button and app title. Logged out when
- * the client is `public`, with an avatar skeleton while it is `waiting`.
+ * The top bar of the platform: home button, app title and apps menu. Logged
+ * out when the client is `public`, with an avatar skeleton while it is
+ * `waiting`.
  */
 export const TwakeBar = ({
   app,
@@ -50,7 +59,7 @@ export const TwakeBar = ({
 }: TwakeBarProps): React.ReactElement => {
   useBarLocales()
   const status = useSdkStatus()
-  const isMobile = useIsMobile()
+  const { isMobile } = useBreakpoints()
 
   return (
     <Root role="banner" data-testid="twake-bar" data-status={status}>
@@ -65,6 +74,11 @@ export const TwakeBar = ({
           height={isMobile ? 24 : 32}
           data-testid="twake-bar-avatar-skeleton"
         />
+      )}
+      {status === 'ready' && (
+        <Right>
+          <AppsMenu />
+        </Right>
       )}
     </Root>
   )
