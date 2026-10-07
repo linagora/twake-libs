@@ -1,3 +1,15 @@
+# @linagora/twake-sdk [1.1.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-sdk@1.0.0...@linagora/twake-sdk@1.1.0) (2026-10-07)
+
+
+### Bug Fixes
+
+* **twake-sdk:** Keep the instance without its disk usage ([aa0a1e9](https://github.com/linagora/twake-libs/commit/aa0a1e9c45bc8869e08f16f58a374e0880f3c95f))
+
+
+### Features
+
+* **twake-sdk:** Read the instance context and the shortcut icons ([b2b3040](https://github.com/linagora/twake-libs/commit/b2b30408ed51e18edb16ebe0a42af3dc379b6e02))
+
 # @linagora/twake-sdk 1.0.0 (2026-10-07)
 
 
