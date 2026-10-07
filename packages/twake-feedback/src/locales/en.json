@@ -1,7 +1,7 @@
 {
   "twakeFeedback": {
     "form": {
-      "triggerLabel": "Feedback",
+      "triggerLabel": "Something wrong?",
       "triggerAriaLabel": "Send feedback",
       "formTitle": "Send feedback",
       "messageLabel": "What happened?",

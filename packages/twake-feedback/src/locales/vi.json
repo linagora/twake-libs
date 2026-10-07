@@ -1,7 +1,7 @@
 {
   "twakeFeedback": {
     "form": {
-      "triggerLabel": "Góp ý",
+      "triggerLabel": "Gặp sự cố?",
       "triggerAriaLabel": "Gửi góp ý",
       "formTitle": "Gửi góp ý",
       "messageLabel": "Đã xảy ra chuyện gì?",

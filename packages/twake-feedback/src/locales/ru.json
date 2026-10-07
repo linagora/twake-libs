@@ -1,7 +1,7 @@
 {
   "twakeFeedback": {
     "form": {
-      "triggerLabel": "Отзыв",
+      "triggerLabel": "Проблема?",
       "triggerAriaLabel": "Отправить отзыв",
       "formTitle": "Отправить отзыв",
       "messageLabel": "Что произошло?",

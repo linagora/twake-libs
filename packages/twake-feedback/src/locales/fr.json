@@ -1,7 +1,7 @@
 {
   "twakeFeedback": {
     "form": {
-      "triggerLabel": "Avis",
+      "triggerLabel": "Un problème ?",
       "triggerAriaLabel": "Donner un avis",
       "formTitle": "Donner un avis",
       "messageLabel": "Que s'est-il passé ?",
