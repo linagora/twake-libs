@@ -5,6 +5,7 @@ export {
   type TwakeSpaceOptions
 } from './app.js'
 export {
+  BADGES_MESSAGE,
   FILL_PAGE_MESSAGE,
   HELLO_MESSAGE,
   LOAD_MESSAGE,
@@ -14,6 +15,7 @@ export {
   PATH_MESSAGE,
   READY_MESSAGE,
   THEME_MESSAGE,
+  badgesMessage,
   fillPageMessage,
   helloMessage,
   loadMessage,
@@ -21,12 +23,15 @@ export {
   navigateMessage,
   overlayRegionMessage,
   parseAppMessage,
+  parseBadges,
   parseHostMessage,
   parseOverlayRegion,
   pathMessage,
   readyMessage,
   themeMessage,
   type AppMessage,
+  type Badge,
+  type BadgesMessage,
   type FillPageMessage,
   type HelloMessage,
   type HostMessage,

@@ -15,6 +15,7 @@
 // be that parent, so the parent is trusted by construction: the header stays
 // mandatory. `hostOrigins` restricts the hosts further, when given.
 import {
+  badgesMessage,
   fillPageMessage,
   loginRequiredMessage,
   overlayRegionMessage,
@@ -22,6 +23,7 @@ import {
   pathMessage,
   readyMessage,
   type AppMessage,
+  type Badge,
   type OverlayRegion
 } from './messages.js'
 import {
@@ -73,6 +75,12 @@ export interface TwakeSpaceConnection {
    */
   fillPage: (fill: boolean) => void
   /**
+   * The counts of the app for every resource it knows, shown on the tabs of
+   * TwakeSpace: each call replaces the previous counts. The last ones are
+   * sent again to a host that greets the frame later.
+   */
+  reportBadges: (badges: readonly Badge[]) => void
+  /**
    * Leaves the history to TwakeSpace, from now on: a push becomes a replace,
    * every change of the URL is reported (the current one first, as a
    * replace, once the host is known), and `load` and `navigate` are applied
@@ -112,6 +120,9 @@ export function connectToTwakeSpace(
     if (origin !== null) parent.postMessage(message, origin)
   }
 
+  // Sent again to a host learnt later: the app reports them on change only
+  let badges: readonly Badge[] | null = null
+
   let handlers: HistoryHandlers | null = null
   let stop: (() => void) | null = null
   let suppressed = 0
@@ -141,6 +152,7 @@ export function connectToTwakeSpace(
     if (origin !== event.origin) {
       origin = event.origin
       reportCurrent(true)
+      if (badges !== null) post(badgesMessage(badges))
     }
     if (
       message.type === 'twake-embed:hello' ||
@@ -214,6 +226,10 @@ export function connectToTwakeSpace(
     },
     fillPage: (fill): void => {
       post(fillPageMessage(fill))
+    },
+    reportBadges: (next): void => {
+      badges = next
+      post(badgesMessage(next))
     },
     syncHistory,
     disconnect: (): void => {

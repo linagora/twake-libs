@@ -128,6 +128,28 @@ describe('connectToTwakeSpace', () => {
     expect(space.hostOrigin()).toBe(HOST)
   })
 
+  it('reports the counts, and the last ones again to a host that greets later', () => {
+    const parent = fakeParent()
+    const space = connect(parent)
+    const badges = [{ resourceId: 'p1', count: 2 }]
+
+    space?.reportBadges(badges)
+    expect(posted(parent)).toEqual([])
+
+    fromHost(parent, hello)
+    expect(posted(parent)).toContainEqual([
+      { type: 'twake-embed:badges', badges },
+      HOST
+    ])
+
+    space?.reportBadges([])
+    expect(posted(parent).at(-1)).toEqual([
+      { type: 'twake-embed:badges', badges: [] },
+      HOST
+    ])
+    space?.disconnect()
+  })
+
   it('keeps to the hosts given, when some are', () => {
     const parent = fakeParent()
     space = connect(parent, '/embed/projects/p1', [HOST])

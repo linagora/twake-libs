@@ -12,6 +12,7 @@ export const FILL_PAGE_MESSAGE = 'twake-embed:fill-page'
 export const THEME_MESSAGE = 'twake-space:theme'
 export const HELLO_MESSAGE = 'twake-embed:hello'
 export const READY_MESSAGE = 'twake-embed:ready'
+export const BADGES_MESSAGE = 'twake-embed:badges'
 
 /**
  * The URL of the frame changed. `replace` is true when the app replaced its
@@ -57,6 +58,24 @@ export interface FillPageMessage {
   fill: boolean
 }
 
+/** What the app counts for one of its resources: unread mail, notifications */
+export interface Badge {
+  resourceId: string
+  count: number
+}
+
+/**
+ * The counts of the app for every resource it knows, shown or not: one frame
+ * of the app serves every space, so TwakeSpace keys them by resource, shows
+ * them on the tab of each space and adds them up in its list of spaces. Each
+ * message replaces the previous one; a count of 0, or a resource left out,
+ * shows nothing.
+ */
+export interface BadgesMessage {
+  type: typeof BADGES_MESSAGE
+  badges: readonly Badge[]
+}
+
 /** Show another resource, at `path`, in the same frame */
 export interface LoadMessage {
   type: typeof LOAD_MESSAGE
@@ -92,6 +111,7 @@ export type AppMessage =
   | LoginRequiredMessage
   | OverlayRegionMessage
   | FillPageMessage
+  | BadgesMessage
 
 /** From TwakeSpace to the app */
 export type HostMessage =
@@ -138,6 +158,10 @@ export function overlayRegionMessage(
 
 export function fillPageMessage(fill: boolean): FillPageMessage {
   return { type: FILL_PAGE_MESSAGE, fill }
+}
+
+export function badgesMessage(badges: readonly Badge[]): BadgesMessage {
+  return { type: BADGES_MESSAGE, badges }
 }
 
 export function loadMessage(resourceId: string, path: string): LoadMessage {
@@ -202,6 +226,40 @@ export function parseOverlayRegion(value: unknown): OverlayRegion | null {
   return boxes
 }
 
+const MAX_BADGES = 1_000
+const MAX_COUNT = 1_000_000
+const MAX_ID_LENGTH = 256
+
+function toBadge(value: unknown): Badge | null {
+  if (!isRecord(value)) return null
+  const { resourceId, count } = value
+  if (
+    typeof resourceId !== 'string' ||
+    resourceId === '' ||
+    resourceId.length > MAX_ID_LENGTH
+  ) {
+    return null
+  }
+  if (typeof count !== 'number' || !Number.isInteger(count)) return null
+  if (count < 0 || count > MAX_COUNT) return null
+  return { resourceId, count }
+}
+
+/**
+ * Counts as reported, bounded: at most 1000 resources, each with a whole
+ * count from 0 to a million
+ */
+export function parseBadges(value: unknown): Badge[] | null {
+  if (!Array.isArray(value) || value.length > MAX_BADGES) return null
+  const badges: Badge[] = []
+  for (const item of value) {
+    const badge = toBadge(item)
+    if (badge === null) return null
+    badges.push(badge)
+  }
+  return badges
+}
+
 function isResourceAndPath(
   data: Record<string, unknown>
 ): data is Record<string, unknown> & { resourceId: string; path: string } {
@@ -231,6 +289,10 @@ export function parseAppMessage(data: unknown): AppMessage | null {
     }
     case FILL_PAGE_MESSAGE:
       return typeof data.fill === 'boolean' ? fillPageMessage(data.fill) : null
+    case BADGES_MESSAGE: {
+      const badges = parseBadges(data.badges)
+      return badges === null ? null : badgesMessage(badges)
+    }
     default:
       return null
   }
