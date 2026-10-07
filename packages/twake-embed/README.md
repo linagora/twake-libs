@@ -68,13 +68,26 @@ renewals use a refresh token or a nested frame. When the login is refused:
 space?.notifyLoginRequired()
 ```
 
-An app TwakeSpace allows to (Chat, for its calls) can take the whole page of
-TwakeSpace and give it back. This is TwakeSpace's page, not the browser's
-full screen, which the app asks the browser for itself:
+Two ways to grow, not to be confused:
 
-```ts
-space?.fillPage(true)
-```
+- **The page of TwakeSpace.** An app TwakeSpace allows to (Chat, for its
+  calls) can take the whole page of TwakeSpace and give it back. TwakeSpace
+  makes the frame cover its page and the rest of it inert:
+
+  ```ts
+  space?.fillPage(true)
+  ```
+
+- **The browser's full screen.** The app asks the browser itself, from a user
+  gesture, for one of its elements or its whole document, as a video player
+  does. It works in a frame only if TwakeSpace granted it with
+  `allow="fullscreen"` on the frame:
+
+  ```ts
+  import { canGoFullscreen, requestFullscreen, exitFullscreen } from '@linagora/twake-embed'
+
+  if (canGoFullscreen()) await requestFullscreen(player)
+  ```
 
 The overlay: TwakeSpace frames `<app url>/embed/overlay.html`, an empty page
 of the app's origin, next to the app's frame and named after it. The app

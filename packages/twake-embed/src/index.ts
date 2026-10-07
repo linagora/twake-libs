@@ -35,6 +35,11 @@ export {
   type ThemeMessage
 } from './messages.js'
 export {
+  canGoFullscreen,
+  exitFullscreen,
+  requestFullscreen
+} from './fullscreen.js'
+export {
   computeOverlayRegion,
   connectSpaceOverlay,
   type SpaceOverlay,
