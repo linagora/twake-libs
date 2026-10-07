@@ -32,84 +32,87 @@ function fromHost(parent: Window, data: unknown, origin = HOST): void {
   )
 }
 
+const hello = { type: 'twake-embed:hello' }
+
 function connect(
   parent: Window,
-  pathname = '/embed/projects/p1'
+  pathname = '/embed/projects/p1',
+  hostOrigins?: string[]
 ): TwakeSpaceConnection | null {
   window.history.replaceState(null, '', pathname)
-  return connectToTwakeSpace({
-    hostOrigins: [HOST],
-    embedPrefix: PREFIX,
-    parent
-  })
+  return connectToTwakeSpace({ embedPrefix: PREFIX, parent, hostOrigins })
 }
 
 describe('connectToTwakeSpace', () => {
-  let stop: (() => void) | null = null
+  let space: TwakeSpaceConnection | null = null
   afterEach(() => {
-    stop?.()
-    stop = null
+    space?.disconnect()
+    space = null
   })
 
-  it('does nothing out of a frame or without a host', () => {
+  it('does nothing out of a frame, or with no host allowed', () => {
     window.history.replaceState(null, '', '/embed/projects/p1')
-    expect(
-      connectToTwakeSpace({ hostOrigins: [HOST], embedPrefix: PREFIX })
-    ).toBeNull()
-    expect(
-      connectToTwakeSpace({
-        hostOrigins: [],
-        embedPrefix: PREFIX,
-        parent: fakeParent()
-      })
-    ).toBeNull()
+    expect(connectToTwakeSpace({ embedPrefix: PREFIX })).toBeNull()
+    expect(connect(fakeParent(), '/embed/projects/p1', [])).toBeNull()
   })
 
-  it('holds on the callback of the login, and reports once back on the route', () => {
+  it('says nothing until the host greets it, then answers that host', () => {
     const parent = fakeParent()
-    const space = connect(parent, '/callback?code=1&state=s')
+    space = connect(parent, '/embed/projects/p1/boards/b1?task=T-1')
     if (!space) throw new Error('not connected')
-    expect(space.location()).toBeNull()
-    stop = space.syncHistory({ onLoad: vi.fn(), onNavigate: vi.fn() })
+    space.notifyLoginRequired()
+    space.reportOverlayRegion('full')
+    space.fillPage(true)
     expect(posted(parent)).toEqual([])
+    expect(space.hostOrigin()).toBeNull()
 
-    window.history.replaceState(null, '', '/embed/projects/p1/inbox')
-
-    expect(posted(parent)).toEqual([
-      [
-        {
-          type: 'twake-embed:path',
-          resourceId: 'p1',
-          path: '/inbox',
-          replace: true
-        },
-        HOST
-      ]
-    ])
-  })
-
-  it('tells TwakeSpace where it is, and about its overlay and its login', () => {
-    const parent = fakeParent()
-    const space = connect(parent, '/embed/projects/p1/boards/b1?task=T-1')
-    if (!space) throw new Error('not connected')
-
-    expect(space.location()).toEqual({
-      resourceId: 'p1',
-      path: '/boards/b1?task=T-1'
-    })
+    fromHost(parent, hello, 'https://another-space.test')
+    expect(space.hostOrigin()).toBe('https://another-space.test')
     space.notifyLoginRequired()
     space.reportOverlayRegion('full')
     space.fillPage(true)
     expect(posted(parent)).toEqual([
-      [{ type: 'twake-embed:login-required' }, HOST],
-      [{ type: 'twake-embed:overlay-region', region: 'full' }, HOST],
-      [{ type: 'twake-embed:fill-page', fill: true }, HOST]
+      [{ type: 'twake-embed:login-required' }, 'https://another-space.test'],
+      [
+        { type: 'twake-embed:overlay-region', region: 'full' },
+        'https://another-space.test'
+      ],
+      [
+        { type: 'twake-embed:fill-page', fill: true },
+        'https://another-space.test'
+      ]
     ])
+  })
+
+  it('learns the host from any of its messages, never from another window', () => {
+    const parent = fakeParent()
+    space = connect(parent)
+    if (!space) throw new Error('not connected')
+
+    window.dispatchEvent(
+      new MessageEvent('message', { data: hello, origin: HOST, source: window })
+    )
+    fromHost(parent, { type: 'not-twake' })
+    expect(space.hostOrigin()).toBeNull()
+
+    fromHost(parent, { type: 'twake-space:theme', theme: 'dark' })
+    expect(space.hostOrigin()).toBe(HOST)
+  })
+
+  it('keeps to the hosts given, when some are', () => {
+    const parent = fakeParent()
+    space = connect(parent, '/embed/projects/p1', [HOST])
+    if (!space) throw new Error('not connected')
+
+    fromHost(parent, hello, 'https://evil.test')
+    expect(space.hostOrigin()).toBeNull()
+    fromHost(parent, hello)
+    expect(space.hostOrigin()).toBe(HOST)
   })
 
   describe('syncHistory', () => {
     let parent: Window
-    let space: TwakeSpaceConnection
+    let stop: () => void
     const handlers = {
       onLoad:
         vi.fn<(resourceId: string, path: string) => void | Promise<void>>(),
@@ -123,9 +126,10 @@ describe('connectToTwakeSpace', () => {
       if (!connected) throw new Error('not connected')
       space = connected
       stop = space.syncHistory(handlers)
+      fromHost(parent, hello)
     })
 
-    it('reports the first URL as a replace', () => {
+    it('reports the URL as a replace once the host greets it', () => {
       expect(posted(parent)).toEqual([
         [
           {
@@ -136,6 +140,19 @@ describe('connectToTwakeSpace', () => {
           },
           HOST
         ]
+      ])
+    })
+
+    it('reports the URL again to a new document greeted again', () => {
+      // The frame reloaded (the silent login): the host greets the new
+      // document, from the same origin
+      fromHost(parent, hello)
+      expect(posted(parent)).toHaveLength(1)
+
+      fromHost(parent, hello, 'https://moved.test')
+      expect(posted(parent).at(-1)).toEqual([
+        { type: 'twake-embed:path', resourceId: 'p1', path: '', replace: true },
+        'https://moved.test'
       ])
     })
 
@@ -157,9 +174,8 @@ describe('connectToTwakeSpace', () => {
       ])
     })
 
-    it('reports a replace as one', () => {
+    it('reports a replace as one, and nothing off the route', () => {
       window.history.replaceState(null, '', '/embed/projects/p1/inbox')
-
       expect(posted(parent).at(-1)).toEqual([
         {
           type: 'twake-embed:path',
@@ -169,9 +185,6 @@ describe('connectToTwakeSpace', () => {
         },
         HOST
       ])
-    })
-
-    it('reports nothing off the route', () => {
       const before = posted(parent).length
       window.history.replaceState(null, '', '/auth/callback?code=1')
       expect(posted(parent)).toHaveLength(before)
@@ -195,7 +208,6 @@ describe('connectToTwakeSpace', () => {
 
       expect(handlers.onNavigate).toHaveBeenCalledWith('p1', '/boards/b3')
       expect(posted(parent)).toHaveLength(before)
-      // Reporting resumes afterwards
       window.history.replaceState(null, '', '/embed/projects/p1/boards/b4')
       expect(posted(parent)).toHaveLength(before + 1)
     })
@@ -228,13 +240,8 @@ describe('connectToTwakeSpace', () => {
       fromHost(parent, {
         type: 'twake-embed:load',
         resourceId: 'p2',
-        path: 'x'
+        path: '//x'
       })
-      fromHost(
-        parent,
-        { type: 'twake-embed:load', resourceId: 'p2', path: '' },
-        'https://evil.test'
-      )
       window.dispatchEvent(
         new MessageEvent('message', {
           data: { type: 'twake-embed:load', resourceId: 'p2', path: '' },
@@ -242,37 +249,62 @@ describe('connectToTwakeSpace', () => {
           source: window
         })
       )
-      fromHost(parent, { type: 'twake-space:theme', theme: 'dark' })
 
       expect(handlers.onNavigate).not.toHaveBeenCalled()
       expect(handlers.onLoad).not.toHaveBeenCalled()
     })
 
     it('syncs once, and stops for good', () => {
-      const again = space.syncHistory(handlers)
-      expect(again).toBe(stop)
+      if (!space) throw new Error('not connected')
+      expect(space.syncHistory(handlers)).toBe(stop)
       const reported = posted(parent).length
 
       space.disconnect()
       window.history.pushState(null, '', '/embed/projects/p1/boards/b9')
+      fromHost(parent, { type: 'twake-embed:load', resourceId: 'p3', path: '' })
 
       expect(posted(parent)).toHaveLength(reported)
+      expect(handlers.onLoad).not.toHaveBeenCalled()
       expect(Object.hasOwn(window.history, 'pushState')).toBe(false)
       expect(Object.hasOwn(window.history, 'replaceState')).toBe(false)
     })
   })
 
+  it('holds on the callback of the login, and reports once back on the route', () => {
+    const parent = fakeParent()
+    space = connect(parent, '/callback?code=1&state=s')
+    if (!space) throw new Error('not connected')
+    expect(space.location()).toBeNull()
+    space.syncHistory({ onLoad: vi.fn(), onNavigate: vi.fn() })
+    fromHost(parent, hello)
+    expect(posted(parent)).toEqual([])
+
+    window.history.replaceState(null, '', '/embed/projects/p1/inbox')
+
+    expect(posted(parent)).toEqual([
+      [
+        {
+          type: 'twake-embed:path',
+          resourceId: 'p1',
+          path: '/inbox',
+          replace: true
+        },
+        HOST
+      ]
+    ])
+  })
+
   it('checks the resource id the app way', () => {
     const parent = fakeParent()
-    const space = connectToTwakeSpace({
-      hostOrigins: [HOST],
+    window.history.replaceState(null, '', '/embed/projects/p1')
+    space = connectToTwakeSpace({
       embedPrefix: PREFIX,
       parent,
       isResourceId: id => /^p\d+$/.test(id)
     })
     if (!space) throw new Error('not connected')
     const onLoad = vi.fn()
-    stop = space.syncHistory({ onLoad, onNavigate: vi.fn() })
+    space.syncHistory({ onLoad, onNavigate: vi.fn() })
 
     fromHost(parent, { type: 'twake-embed:load', resourceId: '../x', path: '' })
     fromHost(parent, { type: 'twake-embed:load', resourceId: 'p7', path: '' })

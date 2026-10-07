@@ -10,6 +10,7 @@ export const LOGIN_REQUIRED_MESSAGE = 'twake-embed:login-required'
 export const OVERLAY_REGION_MESSAGE = 'twake-embed:overlay-region'
 export const FILL_PAGE_MESSAGE = 'twake-embed:fill-page'
 export const THEME_MESSAGE = 'twake-space:theme'
+export const HELLO_MESSAGE = 'twake-embed:hello'
 
 /**
  * The URL of the frame changed. `replace` is true when the app replaced its
@@ -59,6 +60,14 @@ export interface NavigateMessage {
   path: string
 }
 
+/**
+ * TwakeSpace greets the frame on each of its loads: the app learns the
+ * origin of its host from it, and answers from then on
+ */
+export interface HelloMessage {
+  type: typeof HELLO_MESSAGE
+}
+
 /** The colour scheme of TwakeSpace's page */
 export interface ThemeMessage {
   type: typeof THEME_MESSAGE
@@ -73,7 +82,11 @@ export type AppMessage =
   | FillPageMessage
 
 /** From TwakeSpace to the app */
-export type HostMessage = LoadMessage | NavigateMessage | ThemeMessage
+export type HostMessage =
+  | HelloMessage
+  | LoadMessage
+  | NavigateMessage
+  | ThemeMessage
 
 export interface OverlayBox {
   x: number
@@ -120,6 +133,10 @@ export function navigateMessage(
   path: string
 ): NavigateMessage {
   return { type: NAVIGATE_MESSAGE, resourceId, path }
+}
+
+export function helloMessage(): HelloMessage {
+  return { type: HELLO_MESSAGE }
 }
 
 export function themeMessage(theme: 'light' | 'dark'): ThemeMessage {
@@ -205,6 +222,8 @@ export function parseAppMessage(data: unknown): AppMessage | null {
 export function parseHostMessage(data: unknown): HostMessage | null {
   if (!isRecord(data)) return null
   switch (data.type) {
+    case HELLO_MESSAGE:
+      return helloMessage()
     case LOAD_MESSAGE:
       return isResourceAndPath(data)
         ? loadMessage(data.resourceId, data.path)

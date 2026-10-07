@@ -65,6 +65,12 @@ describe('parseAppMessage', () => {
 })
 
 describe('parseHostMessage', () => {
+  it('reads hello', () => {
+    expect(parseHostMessage({ type: 'twake-embed:hello' })).toEqual({
+      type: 'twake-embed:hello'
+    })
+  })
+
   it('reads load, navigate and theme', () => {
     expect(
       parseHostMessage({ type: 'twake-embed:load', resourceId: 'p2', path: '' })

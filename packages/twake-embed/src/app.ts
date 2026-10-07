@@ -7,6 +7,12 @@
 // `load` and `navigate` messages of TwakeSpace. Measured in Chromium, Firefox
 // and WebKit: a removed frame keeps its entries as dead Back presses in
 // Chromium and WebKit, and a frame that only replaces adds none.
+//
+// The app does not need to know where TwakeSpace is: TwakeSpace greets the
+// frame (`twake-embed:hello`) on each of its loads, and the app answers the
+// origin that greeted it. Only a page the app's `frame-ancestors` allows can
+// be that parent, so the parent is trusted by construction: the header stays
+// mandatory. `hostOrigins` restricts the hosts further, when given.
 import {
   fillPageMessage,
   loginRequiredMessage,
@@ -24,12 +30,16 @@ import {
 } from './paths.js'
 
 export interface TwakeSpaceOptions {
-  /** The origins of TwakeSpace the app accepts, and posts to */
-  hostOrigins: readonly string[]
   /** The embed route without the resource id, '/embed/projects/' */
   embedPrefix: string
+  /**
+   * The origins of TwakeSpace the app accepts, when it wants to restrict
+   * them. Without it, the app talks to the page that framed it, once that
+   * page greeted it.
+   */
+  hostOrigins?: readonly string[] | undefined
   /** The shape of a resource id of this app, when it has one */
-  isResourceId?: (resourceId: string) => boolean
+  isResourceId?: ((resourceId: string) => boolean) | undefined
   /** The frame's parent, for tests */
   parent?: Window | undefined
 }
@@ -49,9 +59,11 @@ export interface HistoryHandlers {
 export interface TwakeSpaceConnection {
   /** The resource and path of the frame's URL, null off the embed route */
   location: () => EmbedLocation | null
+  /** The origin of the host, once it greeted the frame */
+  hostOrigin: () => string | null
   /** The silent login was refused: TwakeSpace signs the user in again */
   notifyLoginRequired: () => void
-  /** Where the app draws on its overlay, see `connectSpaceOverlay` */
+  /** Where the app draws on its overlay (the overlay itself is twake-mui's) */
   reportOverlayRegion: (region: OverlayRegion) => void
   /**
    * Asks TwakeSpace for its whole page (a call), or gives it back. Only the
@@ -61,44 +73,48 @@ export interface TwakeSpaceConnection {
   /**
    * Leaves the history to TwakeSpace, from now on: a push becomes a replace,
    * every change of the URL is reported (the current one first, as a
-   * replace), and `load` and `navigate` are applied through the handlers.
-   * Once: a second call returns the same stop function.
+   * replace, once the host is known), and `load` and `navigate` are applied
+   * through the handlers. Once: a second call returns the same stop function.
    */
   syncHistory: (handlers: HistoryHandlers) => () => void
-  /** Stops the history sync */
+  /** Stops the history sync and forgets the host */
   disconnect: () => void
 }
 
 /**
- * The connection to TwakeSpace, null when the app is not framed or has no
- * host origin: the app then runs on its own. Off the embed route (the
- * callback of the silent login, where a framed app may boot) the connection
- * holds: nothing is reported until the URL is back on the route.
+ * The connection to TwakeSpace, null when the app is not framed: the app
+ * then runs on its own. Off the embed route (the callback of the silent
+ * login, where a framed app may boot) the connection holds: nothing is
+ * reported until the URL is back on the route.
  */
 export function connectToTwakeSpace(
   options: TwakeSpaceOptions
 ): TwakeSpaceConnection | null {
   const {
-    hostOrigins,
     embedPrefix,
+    hostOrigins,
     isResourceId = (): boolean => true
   } = options
   const parent = options.parent ?? window.parent
-  if (parent === window || hostOrigins.length === 0) return null
+  if (parent === window) return null
+  if (hostOrigins !== undefined && hostOrigins.length === 0) return null
 
   const location = (): EmbedLocation | null => {
     const { pathname, search, hash } = window.location
     return parseEmbedUrl(embedPrefix, pathname, search, hash)
   }
 
+  // Known once the host spoke, or given
+  let origin: string | null = null
   const post = (message: AppMessage): void => {
-    for (const origin of hostOrigins) parent.postMessage(message, origin)
+    if (origin !== null) parent.postMessage(message, origin)
   }
 
+  let handlers: HistoryHandlers | null = null
   let stop: (() => void) | null = null
   let suppressed = 0
   const reportCurrent = (replace: boolean): void => {
-    if (suppressed > 0) return
+    if (suppressed > 0 || handlers === null) return
     const here = location()
     if (here !== null) post(pathMessage(here.resourceId, here.path, replace))
   }
@@ -113,8 +129,39 @@ export function connectToTwakeSpace(
     }
   }
 
-  const syncHistory = (handlers: HistoryHandlers): (() => void) => {
+  // Every message of the parent tells where the host is; the first one, or
+  // the first one of a new document of the frame, is answered with the path.
+  const onMessage = (event: MessageEvent<unknown>): void => {
+    if (event.source !== parent) return
+    if (hostOrigins !== undefined && !hostOrigins.includes(event.origin)) return
+    const message = parseHostMessage(event.data)
+    if (message === null) return
+    if (origin !== event.origin) {
+      origin = event.origin
+      reportCurrent(true)
+    }
+    if (
+      message.type === 'twake-embed:hello' ||
+      message.type === 'twake-space:theme'
+    ) {
+      return
+    }
+    const { resourceId, path } = message
+    if (handlers === null || !isResourceId(resourceId)) return
+    if (!staysBelow(embedRoute(embedPrefix, resourceId), path)) return
+    const current = handlers
+    if (message.type === 'twake-embed:navigate') {
+      if (location()?.resourceId !== resourceId) return
+      void apply(() => current.onNavigate(resourceId, path))
+    } else {
+      void apply(() => current.onLoad(resourceId, path))
+    }
+  }
+  window.addEventListener('message', onMessage)
+
+  const syncHistory = (next: HistoryHandlers): (() => void) => {
     if (stop !== null) return stop
+    handlers = next
     const { history } = window
     // Called back on `history`, restored as they were
     // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -132,32 +179,16 @@ export function connectToTwakeSpace(
       reportCurrent(true)
     }
 
-    const onMessage = (event: MessageEvent<unknown>): void => {
-      if (!hostOrigins.includes(event.origin) || event.source !== parent) return
-      const message = parseHostMessage(event.data)
-      if (message === null || message.type === 'twake-space:theme') return
-      const { resourceId, path } = message
-      if (!isResourceId(resourceId)) return
-      if (!staysBelow(embedRoute(embedPrefix, resourceId), path)) return
-      if (message.type === 'twake-embed:navigate') {
-        if (location()?.resourceId !== resourceId) return
-        void apply(() => handlers.onNavigate(resourceId, path))
-      } else {
-        void apply(() => handlers.onLoad(resourceId, path))
-      }
-    }
-    window.addEventListener('message', onMessage)
-
     // The first URL came from no history call
     reportCurrent(true)
 
     stop = (): void => {
-      window.removeEventListener('message', onMessage)
       // Own properties shadow the ones of History: dropping them restores it
       if (owned.pushState) history.pushState = pushState
       else Reflect.deleteProperty(history, 'pushState')
       if (owned.replaceState) history.replaceState = replaceState
       else Reflect.deleteProperty(history, 'replaceState')
+      handlers = null
       stop = null
     }
     return stop
@@ -165,6 +196,7 @@ export function connectToTwakeSpace(
 
   return {
     location,
+    hostOrigin: () => origin,
     notifyLoginRequired: (): void => {
       post(loginRequiredMessage())
     },
@@ -177,6 +209,8 @@ export function connectToTwakeSpace(
     syncHistory,
     disconnect: (): void => {
       stop?.()
+      window.removeEventListener('message', onMessage)
+      origin = null
     }
   }
 }

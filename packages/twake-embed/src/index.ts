@@ -6,6 +6,7 @@ export {
 } from './app.js'
 export {
   FILL_PAGE_MESSAGE,
+  HELLO_MESSAGE,
   LOAD_MESSAGE,
   LOGIN_REQUIRED_MESSAGE,
   NAVIGATE_MESSAGE,
@@ -13,6 +14,7 @@ export {
   PATH_MESSAGE,
   THEME_MESSAGE,
   fillPageMessage,
+  helloMessage,
   loadMessage,
   loginRequiredMessage,
   navigateMessage,
@@ -24,6 +26,7 @@ export {
   themeMessage,
   type AppMessage,
   type FillPageMessage,
+  type HelloMessage,
   type HostMessage,
   type LoadMessage,
   type LoginRequiredMessage,
@@ -39,12 +42,6 @@ export {
   exitFullscreen,
   requestFullscreen
 } from './fullscreen.js'
-export {
-  computeOverlayRegion,
-  connectSpaceOverlay,
-  type SpaceOverlay,
-  type SpaceOverlayStatus
-} from './overlay.js'
 export {
   embedRoute,
   embedUrl,
