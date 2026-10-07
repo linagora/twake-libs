@@ -68,6 +68,13 @@ renewals use a refresh token or a nested frame. When the login is refused:
 space?.notifyLoginRequired()
 ```
 
+An app TwakeSpace allows to (Chat, for its calls) can take the whole page
+and give it back:
+
+```ts
+space?.requestFullPage(true)
+```
+
 The overlay: TwakeSpace frames `<app url>/embed/overlay.html`, an empty page
 of the app's origin, next to the app's frame and named after it. The app
 renders its dialogs and docked windows into it, and reports where it draws:

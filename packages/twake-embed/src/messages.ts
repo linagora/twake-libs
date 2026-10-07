@@ -8,6 +8,7 @@ export const LOAD_MESSAGE = 'twake-embed:load'
 export const NAVIGATE_MESSAGE = 'twake-embed:navigate'
 export const LOGIN_REQUIRED_MESSAGE = 'twake-embed:login-required'
 export const OVERLAY_REGION_MESSAGE = 'twake-embed:overlay-region'
+export const FULLSCREEN_MESSAGE = 'twake-embed:fullscreen'
 export const THEME_MESSAGE = 'twake-space:theme'
 
 /**
@@ -31,6 +32,16 @@ export interface LoginRequiredMessage {
 export interface OverlayRegionMessage {
   type: typeof OVERLAY_REGION_MESSAGE
   region: OverlayRegion
+}
+
+/**
+ * The app needs the whole page, or gives it back: a call in Chat. TwakeSpace
+ * lets the frame cover its page while `fullscreen` is true, for the apps it
+ * allows it to.
+ */
+export interface FullscreenMessage {
+  type: typeof FULLSCREEN_MESSAGE
+  fullscreen: boolean
 }
 
 /** Show another resource, at `path`, in the same frame */
@@ -58,6 +69,7 @@ export type AppMessage =
   | PathMessage
   | LoginRequiredMessage
   | OverlayRegionMessage
+  | FullscreenMessage
 
 /** From TwakeSpace to the app */
 export type HostMessage = LoadMessage | NavigateMessage | ThemeMessage
@@ -92,6 +104,10 @@ export function overlayRegionMessage(
   region: OverlayRegion
 ): OverlayRegionMessage {
   return { type: OVERLAY_REGION_MESSAGE, region }
+}
+
+export function fullscreenMessage(fullscreen: boolean): FullscreenMessage {
+  return { type: FULLSCREEN_MESSAGE, fullscreen }
 }
 
 export function loadMessage(resourceId: string, path: string): LoadMessage {
@@ -177,6 +193,10 @@ export function parseAppMessage(data: unknown): AppMessage | null {
       const region = parseOverlayRegion(data.region)
       return region === null ? null : overlayRegionMessage(region)
     }
+    case FULLSCREEN_MESSAGE:
+      return typeof data.fullscreen === 'boolean'
+        ? fullscreenMessage(data.fullscreen)
+        : null
     default:
       return null
   }

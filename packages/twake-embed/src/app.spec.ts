@@ -99,9 +99,11 @@ describe('connectToTwakeSpace', () => {
     })
     space.notifyLoginRequired()
     space.reportOverlayRegion('full')
+    space.requestFullPage(true)
     expect(posted(parent)).toEqual([
       [{ type: 'twake-embed:login-required' }, HOST],
-      [{ type: 'twake-embed:overlay-region', region: 'full' }, HOST]
+      [{ type: 'twake-embed:overlay-region', region: 'full' }, HOST],
+      [{ type: 'twake-embed:fullscreen', fullscreen: true }, HOST]
     ])
   })
 
