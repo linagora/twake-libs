@@ -1,3 +1,10 @@
+# @linagora/twake-embed [2.1.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@2.0.1...@linagora/twake-embed@2.1.0) (2026-10-07)
+
+
+### Features
+
+* **twake-embed:** Report the counts of an app for the tabs of TwakeSpace ([232b0c9](https://github.com/linagora/twake-libs/commit/232b0c9fc4b3dabc4bcc43decf29a0a0e98ea391))
+
 ## @linagora/twake-embed [2.0.1](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@2.0.0...@linagora/twake-embed@2.0.1) (2026-10-07)
 
 
