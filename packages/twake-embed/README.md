@@ -103,6 +103,20 @@ renders its dialogs and docked windows into it with `@linagora/twake-mui`
 space?.reportOverlayRegion(region)
 ```
 
+The badges: a count TwakeSpace shows on the app's tab (unread mail, unread
+notifications), and adds up per space in its list of spaces. One frame of the
+app serves every space, so the app reports the counts of every resource it
+knows, the one shown or not, keyed by the resource id of its embed route.
+Each call replaces the previous counts; 0, or a resource left out, shows
+nothing. Report again whenever a count changes:
+
+```ts
+space?.reportBadges([
+  { resourceId: 'mbx-1', count: 3 },
+  { resourceId: 'mbx-2', count: 0 }
+])
+```
+
 ## In TwakeSpace
 
 ```ts
@@ -111,5 +125,6 @@ import { helloMessage, parseAppMessage, loadMessage, navigateMessage, embedUrl }
 
 TwakeSpace posts `helloMessage()` to a frame on each of its `load` events
 and in answer to its `twake-embed:ready`, with the app's origin as target. `parseAppMessage` reads what a frame sends,
-once the origin and the source window are checked. `embedUrl` builds the frame's `src` for a resource at a
+once the origin and the source window are checked; a `twake-embed:badges`
+message holds the app's counts by resource id. `embedUrl` builds the frame's `src` for a resource at a
 path, and refuses a path that leaves the embed route.

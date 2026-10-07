@@ -57,6 +57,41 @@ describe('parseAppMessage', () => {
     ).toBeNull()
   })
 
+  it('reads the counts of the app for its resources', () => {
+    const badges = [
+      { resourceId: 'mbx-1', count: 3 },
+      { resourceId: 'mbx-2', count: 0 }
+    ]
+    expect(parseAppMessage({ type: 'twake-embed:badges', badges })).toEqual({
+      type: 'twake-embed:badges',
+      badges
+    })
+    expect(parseAppMessage({ type: 'twake-embed:badges', badges: [] })).toEqual(
+      { type: 'twake-embed:badges', badges: [] }
+    )
+  })
+
+  it('refuses counts that do not fit', () => {
+    const refused = (badges: unknown): void => {
+      expect(parseAppMessage({ type: 'twake-embed:badges', badges })).toBeNull()
+    }
+    refused(undefined)
+    refused({ 'mbx-1': 3 })
+    refused([{ resourceId: 'mbx-1', count: -1 }])
+    refused([{ resourceId: 'mbx-1', count: 1.5 }])
+    refused([{ resourceId: 'mbx-1', count: '3' }])
+    refused([{ resourceId: 'mbx-1', count: 1_000_001 }])
+    refused([{ resourceId: '', count: 1 }])
+    refused([{ resourceId: 'x'.repeat(257), count: 1 }])
+    refused([{ count: 1 }])
+    refused(
+      Array.from({ length: 1_001 }, (_, i) => ({
+        resourceId: `r${i}`,
+        count: 1
+      }))
+    )
+  })
+
   it('ignores anything else', () => {
     expect(parseAppMessage(null)).toBeNull()
     expect(parseAppMessage('twake-embed:path')).toBeNull()
