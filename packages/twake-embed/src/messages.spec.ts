@@ -48,6 +48,15 @@ describe('parseAppMessage', () => {
     ).toBeNull()
   })
 
+  it('reads a request for the whole page', () => {
+    expect(
+      parseAppMessage({ type: 'twake-embed:fullscreen', fullscreen: true })
+    ).toEqual({ type: 'twake-embed:fullscreen', fullscreen: true })
+    expect(
+      parseAppMessage({ type: 'twake-embed:fullscreen', fullscreen: 'yes' })
+    ).toBeNull()
+  })
+
   it('ignores anything else', () => {
     expect(parseAppMessage(null)).toBeNull()
     expect(parseAppMessage('twake-embed:path')).toBeNull()

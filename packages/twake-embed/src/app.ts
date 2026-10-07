@@ -8,6 +8,7 @@
 // and WebKit: a removed frame keeps its entries as dead Back presses in
 // Chromium and WebKit, and a frame that only replaces adds none.
 import {
+  fullscreenMessage,
   loginRequiredMessage,
   overlayRegionMessage,
   parseHostMessage,
@@ -52,6 +53,11 @@ export interface TwakeSpaceConnection {
   notifyLoginRequired: () => void
   /** Where the app draws on its overlay, see `connectSpaceOverlay` */
   reportOverlayRegion: (region: OverlayRegion) => void
+  /**
+   * Asks TwakeSpace for the whole page (a call), or gives it back. Only the
+   * apps TwakeSpace allows it to get it.
+   */
+  requestFullPage: (fullscreen: boolean) => void
   /**
    * Leaves the history to TwakeSpace, from now on: a push becomes a replace,
    * every change of the URL is reported (the current one first, as a
@@ -164,6 +170,9 @@ export function connectToTwakeSpace(
     },
     reportOverlayRegion: (region): void => {
       post(overlayRegionMessage(region))
+    },
+    requestFullPage: (fullscreen): void => {
+      post(fullscreenMessage(fullscreen))
     },
     syncHistory,
     disconnect: (): void => {
