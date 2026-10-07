@@ -8,7 +8,7 @@ export const LOAD_MESSAGE = 'twake-embed:load'
 export const NAVIGATE_MESSAGE = 'twake-embed:navigate'
 export const LOGIN_REQUIRED_MESSAGE = 'twake-embed:login-required'
 export const OVERLAY_REGION_MESSAGE = 'twake-embed:overlay-region'
-export const FULLSCREEN_MESSAGE = 'twake-embed:fullscreen'
+export const FILL_PAGE_MESSAGE = 'twake-embed:fill-page'
 export const THEME_MESSAGE = 'twake-space:theme'
 
 /**
@@ -35,13 +35,14 @@ export interface OverlayRegionMessage {
 }
 
 /**
- * The app needs the whole page, or gives it back: a call in Chat. TwakeSpace
- * lets the frame cover its page while `fullscreen` is true, for the apps it
- * allows it to.
+ * The app needs the whole page of TwakeSpace, or gives it back: a call in
+ * Chat. TwakeSpace lets the frame cover its page while `fill` is true, for
+ * the apps it allows it to. Not the browser's full screen: that one an app
+ * asks the browser for itself, with `requestFullscreen`.
  */
-export interface FullscreenMessage {
-  type: typeof FULLSCREEN_MESSAGE
-  fullscreen: boolean
+export interface FillPageMessage {
+  type: typeof FILL_PAGE_MESSAGE
+  fill: boolean
 }
 
 /** Show another resource, at `path`, in the same frame */
@@ -69,7 +70,7 @@ export type AppMessage =
   | PathMessage
   | LoginRequiredMessage
   | OverlayRegionMessage
-  | FullscreenMessage
+  | FillPageMessage
 
 /** From TwakeSpace to the app */
 export type HostMessage = LoadMessage | NavigateMessage | ThemeMessage
@@ -106,8 +107,8 @@ export function overlayRegionMessage(
   return { type: OVERLAY_REGION_MESSAGE, region }
 }
 
-export function fullscreenMessage(fullscreen: boolean): FullscreenMessage {
-  return { type: FULLSCREEN_MESSAGE, fullscreen }
+export function fillPageMessage(fill: boolean): FillPageMessage {
+  return { type: FILL_PAGE_MESSAGE, fill }
 }
 
 export function loadMessage(resourceId: string, path: string): LoadMessage {
@@ -193,10 +194,8 @@ export function parseAppMessage(data: unknown): AppMessage | null {
       const region = parseOverlayRegion(data.region)
       return region === null ? null : overlayRegionMessage(region)
     }
-    case FULLSCREEN_MESSAGE:
-      return typeof data.fullscreen === 'boolean'
-        ? fullscreenMessage(data.fullscreen)
-        : null
+    case FILL_PAGE_MESSAGE:
+      return typeof data.fill === 'boolean' ? fillPageMessage(data.fill) : null
     default:
       return null
   }
