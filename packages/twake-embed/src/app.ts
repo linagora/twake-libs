@@ -64,8 +64,10 @@ export interface TwakeSpaceConnection {
 }
 
 /**
- * The connection to TwakeSpace, null when the app is not framed, has no host
- * origin, or is not on its embed route: the app then runs on its own.
+ * The connection to TwakeSpace, null when the app is not framed or has no
+ * host origin: the app then runs on its own. Off the embed route (the
+ * callback of the silent login, where a framed app may boot) the connection
+ * holds: nothing is reported until the URL is back on the route.
  */
 export function connectToTwakeSpace(
   options: TwakeSpaceOptions
@@ -82,7 +84,6 @@ export function connectToTwakeSpace(
     const { pathname, search, hash } = window.location
     return parseEmbedUrl(embedPrefix, pathname, search, hash)
   }
-  if (location() === null) return null
 
   const post = (message: AppMessage): void => {
     for (const origin of hostOrigins) parent.postMessage(message, origin)
