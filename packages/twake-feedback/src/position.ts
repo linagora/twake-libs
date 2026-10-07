@@ -6,7 +6,7 @@ export interface FeedbackPosition {
   bottom: number
 }
 
-/** Size of a default MUI Fab */
+/** Height of a default MUI Fab, above the 48 px of the extended one */
 export const FAB_SIZE = 56
 /** Gap in px kept between the button and the edges of the viewport */
 export const EDGE_MARGIN = 16
@@ -78,9 +78,10 @@ export const writePosition = (
 export const snapToEdge = (
   drop: { left: number; top: number },
   viewport: { width: number; height: number },
-  bottomOffset: number
+  bottomOffset: number,
+  width = FAB_SIZE
 ): FeedbackPosition => ({
-  side: drop.left + FAB_SIZE / 2 < viewport.width / 2 ? 'left' : 'right',
+  side: drop.left + width / 2 < viewport.width / 2 ? 'left' : 'right',
   bottom: clampBottom(
     viewport.height - drop.top - FAB_SIZE,
     viewport.height,

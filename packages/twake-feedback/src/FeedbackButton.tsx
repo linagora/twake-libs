@@ -46,6 +46,8 @@ interface Gesture {
   startY: number
   originLeft: number
   originTop: number
+  /** The width depends on the label */
+  width: number
   moved: boolean
   longPressed: boolean
   drop: { left: number; top: number } | null
@@ -58,6 +60,9 @@ const clampRange = (value: number, max: number): number =>
 const StyledFab = styled(Fab)(({ theme }) => ({
   position: 'fixed',
   zIndex: theme.zIndex.speedDial,
+  gap: theme.spacing(1),
+  textTransform: 'none',
+  whiteSpace: 'nowrap',
   // Lets pointer events drag the button instead of scrolling the page
   touchAction: 'none',
   userSelect: 'none',
@@ -74,7 +79,7 @@ export const FeedbackButton = ({
 }: FeedbackButtonProps): React.ReactElement => {
   const { lang } = useI18n()
   const strings = getFeedbackButtonStrings(lang)
-  const title = getFeedbackLabels(lang).triggerAriaLabel
+  const { triggerLabel, triggerAriaLabel } = getFeedbackLabels(lang)
 
   // State rather than a ref: the effects and the menu need the mounted element
   const [button, setButton] = useState<HTMLButtonElement | null>(null)
@@ -154,6 +159,7 @@ export const FeedbackButton = ({
       startY: event.clientY,
       originLeft: rect.left,
       originTop: rect.top,
+      width: rect.width,
       moved: false,
       longPressed: false,
       drop: null,
@@ -179,7 +185,10 @@ export const FeedbackButton = ({
     gesture.moved = true
     clearTimer(gesture)
     gesture.drop = {
-      left: clampRange(gesture.originLeft + dx, window.innerWidth - FAB_SIZE),
+      left: clampRange(
+        gesture.originLeft + dx,
+        window.innerWidth - gesture.width
+      ),
       top: clampRange(gesture.originTop + dy, window.innerHeight - FAB_SIZE)
     }
     setDrag(gesture.drop)
@@ -193,7 +202,8 @@ export const FeedbackButton = ({
       const next = snapToEdge(
         gesture.drop,
         { width: window.innerWidth, height: window.innerHeight },
-        bottomOffset
+        bottomOffset,
+        gesture.width
       )
       setStored(next)
       writePosition(storageKey, next)
@@ -250,11 +260,16 @@ export const FeedbackButton = ({
 
   return (
     <>
-      <Tooltip title={title} disableHoverListener={drag !== null}>
+      {/* The visible label names the button, the tooltip describes it */}
+      <Tooltip
+        title={triggerAriaLabel}
+        describeChild
+        disableHoverListener={drag !== null}
+      >
         <StyledFab
           ref={setButton}
           color="primary"
-          aria-label={title}
+          variant="extended"
           aria-haspopup="menu"
           aria-keyshortcuts="Shift+F10"
           data-testid="twake-feedback-button"
@@ -267,6 +282,7 @@ export const FeedbackButton = ({
           onKeyDown={handleKeyDown}
         >
           <Icon icon={Comment} size="24" />
+          {triggerLabel}
         </StyledFab>
       </Tooltip>
       <Menu

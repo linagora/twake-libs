@@ -87,7 +87,7 @@ describe('FeedbackButton', () => {
   it('is a labelled button opening the form on click', () => {
     const { attach, opened } = setup()
 
-    expect(screen.getByRole('button', { name: 'Send feedback' })).toBe(
+    expect(screen.getByRole('button', { name: 'Something wrong?' })).toBe(
       getButton()
     )
     expect(attach).toHaveBeenCalledWith(getButton())
@@ -101,7 +101,7 @@ describe('FeedbackButton', () => {
     setup({}, 'fr')
 
     expect(
-      screen.getByRole('button', { name: 'Donner un avis' })
+      screen.getByRole('button', { name: 'Un problème ?' })
     ).toBeInTheDocument()
   })
 
