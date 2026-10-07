@@ -30,16 +30,19 @@ the page goes back to an entry recorded before the frame navigated.
 ## In the app
 
 Connect as soon as the app knows it is framed, even on the callback page of
-its silent login, and sync the history once its router exists:
+its silent login, and sync the history once its router exists. The app does
+not need TwakeSpace's address: TwakeSpace greets the frame
+(`twake-embed:hello`) on each of its loads, and the app answers the origin
+that greeted it. Only a page the app's `frame-ancestors` allows can be that
+parent, so that header stays mandatory, and it is where the address of
+TwakeSpace belongs, in the deployment of the app. `hostOrigins` restricts the
+hosts further when an app wants to.
 
 ```ts
 import { connectToTwakeSpace, embedRoute } from '@linagora/twake-embed'
 
-const space = connectToTwakeSpace({
-  hostOrigins: window.TWAKE_SPACE_ORIGIN.split(' '),
-  embedPrefix: '/embed/projects/'
-})
-// null when not framed or without a host origin
+const space = connectToTwakeSpace({ embedPrefix: '/embed/projects/' })
+// null when not framed
 
 const stop = space?.syncHistory({
   // Show another resource at `path`, in place; or, until the app can,
@@ -91,21 +94,20 @@ Two ways to grow, not to be confused:
 
 The overlay: TwakeSpace frames `<app url>/embed/overlay.html`, an empty page
 of the app's origin, next to the app's frame and named after it. The app
-renders its dialogs and docked windows into it, and reports where it draws:
+renders its dialogs and docked windows into it with `@linagora/twake-mui`
+(`SpaceOverlayProvider`, `connectSpaceOverlay`), and reports where it draws:
 
 ```ts
-import { connectSpaceOverlay } from '@linagora/twake-embed'
-
-const overlay = connectSpaceOverlay(region => space?.reportOverlayRegion(region))
-// overlay.getBody() is the element to portal into once overlay.getStatus() is 'connected'
+space?.reportOverlayRegion(region)
 ```
 
 ## In TwakeSpace
 
 ```ts
-import { parseAppMessage, loadMessage, navigateMessage, embedUrl } from '@linagora/twake-embed'
+import { helloMessage, parseAppMessage, loadMessage, navigateMessage, embedUrl } from '@linagora/twake-embed'
 ```
 
-`parseAppMessage` reads what a frame sends, once the origin and the source
-window are checked. `embedUrl` builds the frame's `src` for a resource at a
+TwakeSpace posts `helloMessage()` to a frame on each of its `load` events,
+with the app's origin as target. `parseAppMessage` reads what a frame sends,
+once the origin and the source window are checked. `embedUrl` builds the frame's `src` for a resource at a
 path, and refuses a path that leaves the embed route.
