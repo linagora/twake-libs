@@ -1,3 +1,4 @@
+export * from './api'
 export * from './connection'
 export * from './lifecycle'
 export * from './hooks'
