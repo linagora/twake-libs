@@ -33,6 +33,15 @@ describe('TwakeBar', () => {
     expect(screen.queryByTestId('twake-bar-home')).toBeInTheDocument()
   })
 
+  it('shows the home logo, not a link, until the platform gives its URL', () => {
+    renderBar(makeSdk({ status: 'public' }))
+
+    const home = screen.getByTestId('twake-bar-home')
+    expect(home.tagName).toBe('SPAN')
+    expect(home).not.toHaveAttribute('aria-label')
+    expect(screen.queryByRole('link', { name: 'Home' })).toBe(null)
+  })
+
   it('shows the menus once the client is ready', async () => {
     const sdk = makeSdk({
       status: 'waiting',
