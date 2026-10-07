@@ -30,7 +30,8 @@
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
     "multi-semantic-release": "3.1.0",
-    "typescript": "5.5.2"
+    "typescript": "5.5.2",
+    "vitest": "5.0.1"
   },
   "commitlint": {
     "extends": [
