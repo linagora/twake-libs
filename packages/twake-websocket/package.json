@@ -46,8 +46,9 @@
     "cozy-tsconfig": "^2.0.0",
     "eslint": "10.2.1",
     "eslint-config-cozy-app": "7.0.0",
-    "react": "^18.3.0",
     "jsdom": "24.1.0",
+    "ky": "^1.14.3",
+    "react": "^18.3.0",
     "vitest": "5.0.1"
   }
 }

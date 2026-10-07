@@ -1,3 +1,4 @@
+import type { KyInstance } from 'ky'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
@@ -14,8 +15,12 @@ import {
 import { useWebSocketReconnect } from './useReconnect'
 
 export interface UseWebSocketOptions {
-  /** WebSocket URL (including any query parameters such as ticket) */
-  url: string
+  /** Base URL for the WebSocket server (e.g. https://example.com or wss://example.com) */
+  baseUrl: string
+  /** ky instance for fetching the WebSocket ticket */
+  api: KyInstance
+  /** Optional custom ticket endpoint (default: 'ws/ticket') */
+  ticketUrl?: string
   /** Whether the connection should be active */
   enabled?: boolean
   /** Called for every incoming message */
@@ -45,7 +50,9 @@ export interface UseWebSocketResult {
 
 export function useWebSocket(options: UseWebSocketOptions): UseWebSocketResult {
   const {
-    url,
+    baseUrl,
+    api,
+    ticketUrl,
     enabled = true,
     onMessage,
     onClose,
@@ -178,11 +185,13 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketResult {
 
       try {
         await establishWebSocketConnection(
-          url,
+          baseUrl,
+          api,
           callbacks,
           socketRef,
           setIsSocketOpen,
-          abortController.signal
+          abortController.signal,
+          ticketUrl
         )
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -214,7 +223,9 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketResult {
     shouldConnect,
     scheduleReconnect,
     connectionTimeoutMs,
-    url
+    baseUrl,
+    api,
+    ticketUrl
   ])
 
   // Ping/pong health check

@@ -1,14 +1,22 @@
+import type { KyInstance } from 'ky'
+
+import { buildWebSocketUrl } from '../api/buildUrl'
+import { fetchWebSocketTicket } from '../api/fetchTicket'
 import { createWebSocketConnection } from '../connection/createConnection'
 import { WebSocketCallbacks, WebSocketWithCleanup } from '../connection/types'
 
 export async function establishWebSocketConnection(
-  url: string,
+  baseUrl: string,
+  api: KyInstance,
   callbacks: WebSocketCallbacks,
   socketRef: React.MutableRefObject<WebSocketWithCleanup | null>,
   setIsSocketOpen: (value: boolean) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  ticketUrl?: string
 ): Promise<void> {
   try {
+    const ticket = await fetchWebSocketTicket(api, ticketUrl)
+    const url = buildWebSocketUrl(baseUrl, ticket.value)
     const socket = await createWebSocketConnection({ url, callbacks })
 
     if (signal?.aborted) {
