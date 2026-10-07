@@ -69,9 +69,19 @@ const HomeButton = (): React.ReactElement => {
     />
   )
 
+  // Until the platform gives the URL of its home, the logo alone: an `a`
+  // without `href` is not a link, and cannot be named
+  if (!homeURL) {
+    return (
+      <HomeLink as="span" data-testid="twake-bar-home">
+        {icon}
+      </HomeLink>
+    )
+  }
+
   return (
     <HomeLink
-      href={homeURL ?? undefined}
+      href={homeURL}
       aria-label={t('twakeBar.home')}
       data-testid="twake-bar-home"
     >
