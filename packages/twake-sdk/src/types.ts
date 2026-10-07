@@ -52,9 +52,9 @@ export interface Instance {
   email?: string
   public_name?: string
   locale?: string
-  /** Bytes used, from disk-usage */
-  diskUsage: number
-  /** Bytes allowed, null when not limited */
+  /** Bytes used, null when the app may not read the disk usage */
+  diskUsage: number | null
+  /** Bytes allowed, null when not limited or not readable */
   diskQuota: number | null
   [attribute: string]: unknown
 }

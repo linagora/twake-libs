@@ -45,6 +45,7 @@ export interface Sdk {
   getApps(): Promise<App[]>
   /** Installed apps, hidden ones included */
   getAllApps(): Promise<App[]>
+  /** The instance, with its disk usage when the app may read it */
   getInstance(): Promise<Instance>
   getContext(): Promise<Context>
   getFlags(): Promise<Flags>
@@ -241,14 +242,15 @@ export function createSdk(options: SdkOptions): Sdk {
         fetchJSON<JsonApiResponse<JsonApiDoc<Record<string, unknown>>>>(
           '/settings/instance'
         ),
+        // Its own permission: an app without it still has an instance
         fetchJSON<JsonApiResponse<JsonApiDoc<DiskUsageAttributes>>>(
           '/settings/disk-usage'
-        )
+        ).catch(() => null)
       ])
-      const { used, quota } = diskUsage.data.attributes
+      const { used, quota } = diskUsage?.data.attributes ?? {}
       return {
         ...instance.data.attributes,
-        diskUsage: Number(used),
+        diskUsage: used ? Number(used) : null,
         diskQuota: quota ? Number(quota) : null
       }
     })
