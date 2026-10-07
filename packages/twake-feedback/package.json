@@ -1,0 +1,88 @@
+{
+  "name": "@linagora/twake-feedback",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Draggable feedback button and Sentry User Feedback wiring for Twake applications",
+  "author": "Twake",
+  "license": "MIT",
+  "engines": {
+    "node": "24.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linagora/twake-libs.git",
+    "directory": "packages/twake-feedback"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./sentry": {
+      "types": "./dist/sentry.d.ts",
+      "import": "./dist/sentry.js",
+      "default": "./dist/sentry.js"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "sentry": [
+        "dist/sentry.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "start": "tsc -b tsconfig.build.json --watch",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@linagora/twake-icons": ">=2.10.0",
+    "@linagora/twake-mui": ">=10.0.0",
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19",
+    "twake-i18n": ">=0.6.0",
+    "@sentry/react": "^11.4.0"
+  },
+  "peerDependenciesMeta": {
+    "@sentry/react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@linagora/twake-icons": "^2.13.0",
+    "@linagora/twake-mui": "^10.3.0",
+    "@mui/lab": "^9.0.0-beta.6",
+    "@mui/material": "^9.4.0",
+    "@sentry/react": "^11.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "cozy-tsconfig": "^2.0.0",
+    "eslint": "10.2.1",
+    "eslint-config-cozy-app": "7.0.0",
+    "jsdom": "^26.1.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "twake-i18n": "^0.6.0",
+    "vitest": "5.0.1"
+  }
+}
