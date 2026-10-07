@@ -106,7 +106,7 @@ describe('parseHostMessage', () => {
     })
   })
 
-  it('reads load, navigate and theme', () => {
+  it('reads load and navigate', () => {
     expect(
       parseHostMessage({ type: 'twake-embed:load', resourceId: 'p2', path: '' })
     ).toEqual({ type: 'twake-embed:load', resourceId: 'p2', path: '' })
@@ -117,9 +117,6 @@ describe('parseHostMessage', () => {
         path: '?q=a'
       })
     ).toEqual({ type: 'twake-embed:navigate', resourceId: 'p1', path: '?q=a' })
-    expect(
-      parseHostMessage({ type: 'twake-space:theme', theme: 'dark' })
-    ).toEqual({ type: 'twake-space:theme', theme: 'dark' })
   })
 
   it('refuses what does not fit', () => {
@@ -138,7 +135,7 @@ describe('parseHostMessage', () => {
       })
     ).toBeNull()
     expect(
-      parseHostMessage({ type: 'twake-space:theme', theme: 'blue' })
+      parseHostMessage({ type: 'twake-space:theme', theme: 'dark' })
     ).toBeNull()
     expect(
       parseHostMessage({ type: 'twake-embed:path', resourceId: 'p1', path: '' })

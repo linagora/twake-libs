@@ -14,7 +14,6 @@ export {
   OVERLAY_REGION_MESSAGE,
   PATH_MESSAGE,
   READY_MESSAGE,
-  THEME_MESSAGE,
   badgesMessage,
   fillPageMessage,
   helloMessage,
@@ -28,7 +27,6 @@ export {
   parseOverlayRegion,
   pathMessage,
   readyMessage,
-  themeMessage,
   type AppMessage,
   type Badge,
   type BadgesMessage,
@@ -42,8 +40,7 @@ export {
   type OverlayRegion,
   type OverlayRegionMessage,
   type PathMessage,
-  type ReadyMessage,
-  type ThemeMessage
+  type ReadyMessage
 } from './messages.js'
 export {
   canGoFullscreen,

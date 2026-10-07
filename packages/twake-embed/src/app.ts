@@ -154,12 +154,7 @@ export function connectToTwakeSpace(
       reportCurrent(true)
       if (badges !== null) post(badgesMessage(badges))
     }
-    if (
-      message.type === 'twake-embed:hello' ||
-      message.type === 'twake-space:theme'
-    ) {
-      return
-    }
+    if (message.type === 'twake-embed:hello') return
     const { resourceId, path } = message
     if (handlers === null || !isResourceId(resourceId)) return
     if (!staysBelow(embedRoute(embedPrefix, resourceId), path)) return
