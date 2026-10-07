@@ -1,3 +1,10 @@
+# @linagora/twake-feedback [1.1.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-feedback@1.0.0...@linagora/twake-feedback@1.1.0) (2026-10-07)
+
+
+### Features
+
+* **twake-feedback:** Show a visible label on the button ([c281511](https://github.com/linagora/twake-libs/commit/c281511cff4a5258c3b0822b740e1c579dade126))
+
 # @linagora/twake-feedback 1.0.0 (2026-10-07)
 
 
