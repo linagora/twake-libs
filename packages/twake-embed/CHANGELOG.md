@@ -1,3 +1,19 @@
+# @linagora/twake-embed [2.0.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@1.1.0...@linagora/twake-embed@2.0.0) (2026-10-07)
+
+
+* feat(twake-embed)!: Learn the host from its greeting, leave the overlay to twake-mui ([#11](https://github.com/linagora/twake-libs/issues/11)) ([16dc511](https://github.com/linagora/twake-libs/commit/16dc511156f8f1979eb74676282cb619d0dc0678))
+
+
+### BREAKING CHANGES
+
+* `connectSpaceOverlay`, `computeOverlayRegion`,
+`SpaceOverlay` and `SpaceOverlayStatus` are gone, take them from
+@linagora/twake-mui. An app that gives no `hostOrigins` posts nothing until
+TwakeSpace greets it, so TwakeSpace sends `helloMessage()` on each load of
+a frame first.
+
+Co-authored-by: Claude Fable 5.1 <noreply@anthropic.com>
+
 # @linagora/twake-embed [1.1.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@1.0.0...@linagora/twake-embed@1.1.0) (2026-10-07)
 
 
