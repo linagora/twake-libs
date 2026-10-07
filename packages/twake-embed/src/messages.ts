@@ -9,7 +9,6 @@ export const NAVIGATE_MESSAGE = 'twake-embed:navigate'
 export const LOGIN_REQUIRED_MESSAGE = 'twake-embed:login-required'
 export const OVERLAY_REGION_MESSAGE = 'twake-embed:overlay-region'
 export const FILL_PAGE_MESSAGE = 'twake-embed:fill-page'
-export const THEME_MESSAGE = 'twake-space:theme'
 export const HELLO_MESSAGE = 'twake-embed:hello'
 export const READY_MESSAGE = 'twake-embed:ready'
 export const BADGES_MESSAGE = 'twake-embed:badges'
@@ -98,12 +97,6 @@ export interface HelloMessage {
   type: typeof HELLO_MESSAGE
 }
 
-/** The colour scheme of TwakeSpace's page */
-export interface ThemeMessage {
-  type: typeof THEME_MESSAGE
-  theme: 'light' | 'dark'
-}
-
 /** From the app to TwakeSpace */
 export type AppMessage =
   | ReadyMessage
@@ -114,11 +107,7 @@ export type AppMessage =
   | BadgesMessage
 
 /** From TwakeSpace to the app */
-export type HostMessage =
-  | HelloMessage
-  | LoadMessage
-  | NavigateMessage
-  | ThemeMessage
+export type HostMessage = HelloMessage | LoadMessage | NavigateMessage
 
 export interface OverlayBox {
   x: number
@@ -177,10 +166,6 @@ export function navigateMessage(
 
 export function helloMessage(): HelloMessage {
   return { type: HELLO_MESSAGE }
-}
-
-export function themeMessage(theme: 'light' | 'dark'): ThemeMessage {
-  return { type: THEME_MESSAGE, theme }
 }
 
 const MAX_BOXES = 32
@@ -311,10 +296,6 @@ export function parseHostMessage(data: unknown): HostMessage | null {
     case NAVIGATE_MESSAGE:
       return isResourceAndPath(data)
         ? navigateMessage(data.resourceId, data.path)
-        : null
-    case THEME_MESSAGE:
-      return data.theme === 'light' || data.theme === 'dark'
-        ? themeMessage(data.theme)
         : null
     default:
       return null

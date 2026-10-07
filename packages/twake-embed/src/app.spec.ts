@@ -124,7 +124,11 @@ describe('connectToTwakeSpace', () => {
     fromHost(parent, { type: 'not-twake' })
     expect(space.hostOrigin()).toBeNull()
 
-    fromHost(parent, { type: 'twake-space:theme', theme: 'dark' })
+    fromHost(parent, {
+      type: 'twake-embed:navigate',
+      resourceId: 'p1',
+      path: ''
+    })
     expect(space.hostOrigin()).toBe(HOST)
   })
 
