@@ -1,3 +1,10 @@
+## @linagora/twake-embed [2.0.1](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@2.0.0...@linagora/twake-embed@2.0.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **twake-embed:** Ask TwakeSpace for its greeting when the app boots late ([#14](https://github.com/linagora/twake-libs/issues/14)) ([4492645](https://github.com/linagora/twake-libs/commit/44926455210e4a10097e999a3a36ef0d34b6f02b))
+
 # @linagora/twake-embed [2.0.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@1.1.0...@linagora/twake-embed@2.0.0) (2026-10-07)
 
 
