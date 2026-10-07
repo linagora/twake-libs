@@ -1,7 +1,7 @@
 {
   "name": "@linagora/twake-feedback",
   "type": "module",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Draggable feedback button and Sentry User Feedback wiring for Twake applications",
   "author": "Twake",
   "license": "MIT",
