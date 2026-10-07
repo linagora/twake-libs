@@ -10,9 +10,15 @@ export interface EmbedLocation {
   path: string
 }
 
-/** Whether `path` has the shape of a path below an embed route */
+/**
+ * Whether `path` has the shape of a path below an embed route. A double slash
+ * or a backslash in its pathname is refused: a router may read them as
+ * another host or collapse them above the route.
+ */
 export function isBelow(path: string): boolean {
-  return /^([/?#]|$)/.test(path)
+  if (!/^([/?#]|$)/.test(path)) return false
+  const pathname = path.split(/[?#]/, 1)[0] ?? ''
+  return !pathname.includes('//') && !pathname.includes('\\')
 }
 
 /** The embed route of a resource under `prefix` ('/embed/projects/') */

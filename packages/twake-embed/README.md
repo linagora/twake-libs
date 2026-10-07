@@ -57,7 +57,7 @@ const stop = space?.syncHistory({
 ```
 
 `path` is '' on the embed route itself, otherwise the rest of the URL below
-it, starting with `/`, `?` or `#`. Nothing a handler writes to the URL is
+it, starting with `/`, `?` or `#`; a `//` or a `\\` in its pathname is refused. Nothing a handler writes to the URL is
 reported while its promise is pending. Pass `isResourceId` to refuse ids that
 do not look like the app's.
 
