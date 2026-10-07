@@ -48,12 +48,12 @@ describe('parseAppMessage', () => {
     ).toBeNull()
   })
 
-  it('reads a request for the whole page', () => {
+  it('reads a request for the whole page of TwakeSpace', () => {
     expect(
-      parseAppMessage({ type: 'twake-embed:fullscreen', fullscreen: true })
-    ).toEqual({ type: 'twake-embed:fullscreen', fullscreen: true })
+      parseAppMessage({ type: 'twake-embed:fill-page', fill: true })
+    ).toEqual({ type: 'twake-embed:fill-page', fill: true })
     expect(
-      parseAppMessage({ type: 'twake-embed:fullscreen', fullscreen: 'yes' })
+      parseAppMessage({ type: 'twake-embed:fill-page', fill: 'yes' })
     ).toBeNull()
   })
 

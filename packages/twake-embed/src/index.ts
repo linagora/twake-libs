@@ -5,14 +5,14 @@ export {
   type TwakeSpaceOptions
 } from './app.js'
 export {
-  FULLSCREEN_MESSAGE,
+  FILL_PAGE_MESSAGE,
   LOAD_MESSAGE,
   LOGIN_REQUIRED_MESSAGE,
   NAVIGATE_MESSAGE,
   OVERLAY_REGION_MESSAGE,
   PATH_MESSAGE,
   THEME_MESSAGE,
-  fullscreenMessage,
+  fillPageMessage,
   loadMessage,
   loginRequiredMessage,
   navigateMessage,
@@ -23,7 +23,7 @@ export {
   pathMessage,
   themeMessage,
   type AppMessage,
-  type FullscreenMessage,
+  type FillPageMessage,
   type HostMessage,
   type LoadMessage,
   type LoginRequiredMessage,
