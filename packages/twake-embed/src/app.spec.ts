@@ -51,7 +51,7 @@ describe('connectToTwakeSpace', () => {
     stop = null
   })
 
-  it('does nothing out of a frame, without a host or off the route', () => {
+  it('does nothing out of a frame or without a host', () => {
     window.history.replaceState(null, '', '/embed/projects/p1')
     expect(
       connectToTwakeSpace({ hostOrigins: [HOST], embedPrefix: PREFIX })
@@ -63,7 +63,29 @@ describe('connectToTwakeSpace', () => {
         parent: fakeParent()
       })
     ).toBeNull()
-    expect(connect(fakeParent(), '/boards/b1')).toBeNull()
+  })
+
+  it('holds on the callback of the login, and reports once back on the route', () => {
+    const parent = fakeParent()
+    const space = connect(parent, '/callback?code=1&state=s')
+    if (!space) throw new Error('not connected')
+    expect(space.location()).toBeNull()
+    stop = space.syncHistory({ onLoad: vi.fn(), onNavigate: vi.fn() })
+    expect(posted(parent)).toEqual([])
+
+    window.history.replaceState(null, '', '/embed/projects/p1/inbox')
+
+    expect(posted(parent)).toEqual([
+      [
+        {
+          type: 'twake-embed:path',
+          resourceId: 'p1',
+          path: '/inbox',
+          replace: true
+        },
+        HOST
+      ]
+    ])
   })
 
   it('tells TwakeSpace where it is, and about its overlay and its login', () => {
@@ -235,7 +257,6 @@ describe('connectToTwakeSpace', () => {
       expect(posted(parent)).toHaveLength(reported)
       expect(Object.hasOwn(window.history, 'pushState')).toBe(false)
       expect(Object.hasOwn(window.history, 'replaceState')).toBe(false)
-      window.history.back()
     })
   })
 

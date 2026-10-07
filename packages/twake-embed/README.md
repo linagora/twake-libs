@@ -29,8 +29,8 @@ the page goes back to an entry recorded before the frame navigated.
 
 ## In the app
 
-Connect once the app knows it runs on its embed route, and sync the history
-once its router exists:
+Connect as soon as the app knows it is framed, even on the callback page of
+its silent login, and sync the history once its router exists:
 
 ```ts
 import { connectToTwakeSpace, embedRoute } from '@linagora/twake-embed'
@@ -39,7 +39,7 @@ const space = connectToTwakeSpace({
   hostOrigins: window.TWAKE_SPACE_ORIGIN.split(' '),
   embedPrefix: '/embed/projects/'
 })
-// null when not framed, without a host origin, or off the embed route
+// null when not framed or without a host origin
 
 const stop = space?.syncHistory({
   // Show another resource at `path`, in place; or, until the app can,
