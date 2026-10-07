@@ -11,6 +11,7 @@ export const OVERLAY_REGION_MESSAGE = 'twake-embed:overlay-region'
 export const FILL_PAGE_MESSAGE = 'twake-embed:fill-page'
 export const THEME_MESSAGE = 'twake-space:theme'
 export const HELLO_MESSAGE = 'twake-embed:hello'
+export const READY_MESSAGE = 'twake-embed:ready'
 
 /**
  * The URL of the frame changed. `replace` is true when the app replaced its
@@ -22,6 +23,16 @@ export interface PathMessage {
   resourceId: string
   path: string
   replace: boolean
+}
+
+/**
+ * The app is listening: TwakeSpace answers with its greeting. The app says
+ * it to whoever framed it (an empty message, to any origin), since it does
+ * not know its host yet; only a page its `frame-ancestors` allows can be
+ * there.
+ */
+export interface ReadyMessage {
+  type: typeof READY_MESSAGE
 }
 
 /** The silent login was refused: TwakeSpace signs the user in again */
@@ -76,6 +87,7 @@ export interface ThemeMessage {
 
 /** From the app to TwakeSpace */
 export type AppMessage =
+  | ReadyMessage
   | PathMessage
   | LoginRequiredMessage
   | OverlayRegionMessage
@@ -108,6 +120,10 @@ export function pathMessage(
   replace: boolean
 ): PathMessage {
   return { type: PATH_MESSAGE, resourceId, path, replace }
+}
+
+export function readyMessage(): ReadyMessage {
+  return { type: READY_MESSAGE }
 }
 
 export function loginRequiredMessage(): LoginRequiredMessage {
@@ -201,6 +217,8 @@ function isResourceAndPath(
 export function parseAppMessage(data: unknown): AppMessage | null {
   if (!isRecord(data)) return null
   switch (data.type) {
+    case READY_MESSAGE:
+      return readyMessage()
     case PATH_MESSAGE:
       return isResourceAndPath(data)
         ? pathMessage(data.resourceId, data.path, data.replace !== false)

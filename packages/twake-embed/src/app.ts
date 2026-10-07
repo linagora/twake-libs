@@ -9,8 +9,9 @@
 // Chromium and WebKit, and a frame that only replaces adds none.
 //
 // The app does not need to know where TwakeSpace is: TwakeSpace greets the
-// frame (`twake-embed:hello`) on each of its loads, and the app answers the
-// origin that greeted it. Only a page the app's `frame-ancestors` allows can
+// frame (`twake-embed:hello`) on each of its loads and whenever the app says
+// it is listening (`twake-embed:ready`, since the app may boot after the
+// frame's load), and the app answers the origin that greeted it. Only a page the app's `frame-ancestors` allows can
 // be that parent, so the parent is trusted by construction: the header stays
 // mandatory. `hostOrigins` restricts the hosts further, when given.
 import {
@@ -19,6 +20,7 @@ import {
   overlayRegionMessage,
   parseHostMessage,
   pathMessage,
+  readyMessage,
   type AppMessage,
   type OverlayRegion
 } from './messages.js'
@@ -158,6 +160,12 @@ export function connectToTwakeSpace(
     }
   }
   window.addEventListener('message', onMessage)
+  // The frame may have loaded before the app listened: it asks for the
+  // greeting. The message carries nothing, so any parent may read it.
+  const askForGreeting = (): void => {
+    if (origin === null) parent.postMessage(readyMessage(), '*')
+  }
+  askForGreeting()
 
   const syncHistory = (next: HistoryHandlers): (() => void) => {
     if (stop !== null) return stop
@@ -181,6 +189,7 @@ export function connectToTwakeSpace(
 
     // The first URL came from no history call
     reportCurrent(true)
+    askForGreeting()
 
     stop = (): void => {
       // Own properties shadow the ones of History: dropping them restores it
