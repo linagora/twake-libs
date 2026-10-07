@@ -12,6 +12,7 @@ export {
   NAVIGATE_MESSAGE,
   OVERLAY_REGION_MESSAGE,
   PATH_MESSAGE,
+  READY_MESSAGE,
   THEME_MESSAGE,
   fillPageMessage,
   helloMessage,
@@ -23,6 +24,7 @@ export {
   parseHostMessage,
   parseOverlayRegion,
   pathMessage,
+  readyMessage,
   themeMessage,
   type AppMessage,
   type FillPageMessage,
@@ -35,6 +37,7 @@ export {
   type OverlayRegion,
   type OverlayRegionMessage,
   type PathMessage,
+  type ReadyMessage,
   type ThemeMessage
 } from './messages.js'
 export {

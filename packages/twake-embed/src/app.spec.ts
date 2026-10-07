@@ -22,8 +22,18 @@ function fakeParent(): Window {
   return parent
 }
 
+// What the app posted, apart from asking for the greeting
 function posted(parent: Window): unknown[][] {
-  return (posts.get(parent)?.mock.calls ?? []) as unknown[][]
+  return ((posts.get(parent)?.mock.calls ?? []) as unknown[][]).filter(
+    ([data]) => (data as { type: string }).type !== 'twake-embed:ready'
+  )
+}
+
+function asked(parent: Window): number {
+  return ((posts.get(parent)?.mock.calls ?? []) as unknown[][]).filter(
+    ([data, target]) =>
+      (data as { type: string }).type === 'twake-embed:ready' && target === '*'
+  ).length
 }
 
 function fromHost(parent: Window, data: unknown, origin = HOST): void {
@@ -54,6 +64,25 @@ describe('connectToTwakeSpace', () => {
     window.history.replaceState(null, '', '/embed/projects/p1')
     expect(connectToTwakeSpace({ embedPrefix: PREFIX })).toBeNull()
     expect(connect(fakeParent(), '/embed/projects/p1', [])).toBeNull()
+  })
+
+  it('asks whoever framed it for the greeting, until it comes', () => {
+    const parent = fakeParent()
+    space = connect(parent)
+    if (!space) throw new Error('not connected')
+    expect(asked(parent)).toBe(1)
+
+    space.syncHistory({ onLoad: vi.fn(), onNavigate: vi.fn() })
+    expect(asked(parent)).toBe(2)
+
+    fromHost(parent, hello)
+    space.disconnect()
+    space = connect(parent)
+    if (!space) throw new Error('not connected')
+    fromHost(parent, hello)
+    space.syncHistory({ onLoad: vi.fn(), onNavigate: vi.fn() })
+    // Greeted already: no need to ask again
+    expect(asked(parent)).toBe(3)
   })
 
   it('says nothing until the host greets it, then answers that host', () => {

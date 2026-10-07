@@ -32,8 +32,10 @@ the page goes back to an entry recorded before the frame navigated.
 Connect as soon as the app knows it is framed, even on the callback page of
 its silent login, and sync the history once its router exists. The app does
 not need TwakeSpace's address: TwakeSpace greets the frame
-(`twake-embed:hello`) on each of its loads, and the app answers the origin
-that greeted it. Only a page the app's `frame-ancestors` allows can be that
+(`twake-embed:hello`) on each of its loads and whenever the app says it is
+listening (`twake-embed:ready`, posted to whoever framed it, since the app
+may boot after the frame's load), and the app answers the origin that
+greeted it. Only a page the app's `frame-ancestors` allows can be that
 parent, so that header stays mandatory, and it is where the address of
 TwakeSpace belongs, in the deployment of the app. `hostOrigins` restricts the
 hosts further when an app wants to.
@@ -107,7 +109,7 @@ space?.reportOverlayRegion(region)
 import { helloMessage, parseAppMessage, loadMessage, navigateMessage, embedUrl } from '@linagora/twake-embed'
 ```
 
-TwakeSpace posts `helloMessage()` to a frame on each of its `load` events,
-with the app's origin as target. `parseAppMessage` reads what a frame sends,
+TwakeSpace posts `helloMessage()` to a frame on each of its `load` events
+and in answer to its `twake-embed:ready`, with the app's origin as target. `parseAppMessage` reads what a frame sends,
 once the origin and the source window are checked. `embedUrl` builds the frame's `src` for a resource at a
 path, and refuses a path that leaves the embed route.
