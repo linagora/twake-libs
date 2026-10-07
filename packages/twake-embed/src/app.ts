@@ -31,7 +31,7 @@ export interface TwakeSpaceOptions {
   /** The shape of a resource id of this app, when it has one */
   isResourceId?: (resourceId: string) => boolean
   /** The frame's parent, for tests */
-  parent?: Window
+  parent?: Window | undefined
 }
 
 export interface HistoryHandlers {

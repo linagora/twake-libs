@@ -72,6 +72,12 @@ describe('embedUrl', () => {
     expect(embedUrl(APP, '/embed/projects/p1', '/../../admin')).toBeNull()
     expect(embedUrl(APP, '/embed/projects/p1', '/%2e%2e/%2e%2e/x')).toBeNull()
     expect(embedUrl(APP, '/embed/projects/p1', '/..\\x')).toBeNull()
+    expect(embedUrl(APP, '/embed/projects/p1', '//evil.test/x')).toBeNull()
+    expect(embedUrl(APP, '/embed/projects/p1', '/a//b')).toBeNull()
+    expect(embedUrl(APP, '/embed/projects/p1', '/a\\b')).toBeNull()
+    expect(embedUrl(APP, '/embed/projects/p1', '/a?next=http://x//y')).toBe(
+      'https://tasks.test/embed/projects/p1/a?next=http://x//y'
+    )
     expect(staysBelow('/embed/projects/p1', '/boards/b1')).toBe(true)
     expect(staysBelow('/embed/projects/p1', '/../p2')).toBe(false)
   })
