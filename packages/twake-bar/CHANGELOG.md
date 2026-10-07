@@ -1,3 +1,10 @@
+## @linagora/twake-bar [1.0.1](https://github.com/linagora/twake-libs/compare/@linagora/twake-bar@1.0.0...@linagora/twake-bar@1.0.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **twake-bar:** Show the home logo alone until the platform gives its URL ([a14c077](https://github.com/linagora/twake-libs/commit/a14c077a72b65edd648686550233e5645526b566))
+
 # @linagora/twake-bar 1.0.0 (2026-10-07)
 
 
