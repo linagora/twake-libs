@@ -205,6 +205,26 @@ describe('platform data', () => {
     })
   })
 
+  it('keeps the instance when the disk usage is refused', async () => {
+    const { sdk } = await loggedIn({
+      '/settings/instance': () =>
+        json({
+          data: {
+            id: 'io.cozy.settings.instance',
+            type: 'io.cozy.settings',
+            attributes: { public_name: 'Alice' }
+          }
+        }),
+      '/settings/disk-usage': () => json({}, 403)
+    })
+
+    await expect(sdk.getInstance()).resolves.toEqual({
+      public_name: 'Alice',
+      diskUsage: null,
+      diskQuota: null
+    })
+  })
+
   it('reads the context of the instance', async () => {
     const { sdk } = await loggedIn({
       '/settings/context': () =>
