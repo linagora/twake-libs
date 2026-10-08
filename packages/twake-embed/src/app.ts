@@ -101,9 +101,16 @@ export interface TwakeSpaceConnection {
   /**
    * A notification of the system, shown by TwakeSpace: a frame of another
    * origin may not show one. A new one with the same `tag` replaces it.
-   * Not sent again to a host that greets later: it is of the moment.
+   * `resourceId`: the resource it is about, whose space TwakeSpace opens
+   * on a click. Not sent again to a host that greets later: it is of the
+   * moment.
    */
-  notify: (notice: { tag: string; title: string; body: string }) => void
+  notify: (notice: {
+    tag: string
+    title: string
+    body: string
+    resourceId?: string
+  }) => void
   /** Closes the notification of that tag, when what it told is over */
   closeNotification: (tag: string) => void
   /**

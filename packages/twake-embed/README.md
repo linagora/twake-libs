@@ -151,10 +151,17 @@ space?.reportMetadata([
 The notifications: a frame of another origin may not show a notification of
 the system, the browser refuses it even when the app has the permission.
 TwakeSpace shows it for the app (Chat, for a call that rings). One per tag: a
-new one with the same tag replaces it. Close it when what it told is over:
+new one with the same tag replaces it. `resourceId`, the resource it is about
+(as in the badges), tells TwakeSpace which space a click opens; without it,
+the space the frame shows. Close it when what it told is over:
 
 ```ts
-space?.notify({ tag: 'call:!room', title: 'Alice', body: 'is calling you' })
+space?.notify({
+  tag: 'call:!room',
+  title: 'Alice',
+  body: 'is calling you',
+  resourceId: '!space'
+})
 space?.closeNotification('call:!room')
 ```
 
