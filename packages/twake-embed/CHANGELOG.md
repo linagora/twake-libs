@@ -1,3 +1,10 @@
+# @linagora/twake-embed [3.4.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@3.3.0...@linagora/twake-embed@3.4.0) (2026-10-08)
+
+
+### Features
+
+* **twake-embed:** Report the metadata of an app's resources ([43b517a](https://github.com/linagora/twake-libs/commit/43b517ac8c0dcaabf16b052132de2ced130e75d4))
+
 # @linagora/twake-embed [3.3.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@3.2.0...@linagora/twake-embed@3.3.0) (2026-10-08)
 
 
