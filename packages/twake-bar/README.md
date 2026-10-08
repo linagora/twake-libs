@@ -44,7 +44,7 @@ The bar follows the SDK status: logged out when it is `public`, an avatar skelet
 
 ### Props
 
-- `app`: `slug`, `name`, `icon` URL and optional `textIcon` URL, served by the host
+- `app`: `slug`, `name`, `icon` URL and optional `textIcon` URL, served by the host. The text icon renders at its intrinsic size, top aligned on the 22px Twake wordmark, so size it against that box and let descenders extend below
 - `onLogOut`: called by the log out item, the host ends its SSO session
 - `slots`: `left` replaces the home button and title, `center`, `search` fills the middle, `right` is rendered before the menus
 - `showEmailDomainChip`: warns when the organization has no mail app yet (default `true`)
