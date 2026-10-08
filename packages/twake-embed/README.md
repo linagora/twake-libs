@@ -98,6 +98,15 @@ Two ways to grow, not to be confused:
   if (canGoFullscreen()) await requestFullscreen(player)
   ```
 
+The call window: an app that holds a link to a call (a Meet room in an event,
+in a message) asks TwakeSpace to open it in its own call window, floating
+over its page, instead of a new tab. TwakeSpace opens the rooms of its Meet
+only, and drops anything else:
+
+```ts
+space?.openPip(meetingUrl)
+```
+
 The overlay: TwakeSpace frames `<app url>/embed/overlay.html`, an empty page
 of the app's origin, next to the app's frame and named after it. The app
 renders its dialogs and docked windows into it with `@linagora/twake-mui`
@@ -140,5 +149,7 @@ import { helloMessage, parseAppMessage, loadMessage, navigateMessage, embedUrl }
 TwakeSpace posts `helloMessage()` to a frame on each of its `load` events
 and in answer to its `twake-embed:ready`, with the app's origin as target. `parseAppMessage` reads what a frame sends,
 once the origin and the source window are checked; a `twake-embed:badges`
-message holds the app's counts by resource id. `embedUrl` builds the frame's `src` for a resource at a
+message holds the app's counts by resource id, and a `twake-embed:pip`
+message a call the app asks TwakeSpace to open in its call window, to check
+against its Meet before it does. `embedUrl` builds the frame's `src` for a resource at a
 path, and refuses a path that leaves the embed route.

@@ -92,6 +92,7 @@ describe('connectToTwakeSpace', () => {
     space.notifyLoginRequired()
     space.reportOverlayRegion('full')
     space.fillPage(true)
+    space.openPip('https://meet.test/abc-defg-hij')
     expect(posted(parent)).toEqual([])
     expect(space.hostOrigin()).toBeNull()
 
@@ -100,6 +101,7 @@ describe('connectToTwakeSpace', () => {
     space.notifyLoginRequired()
     space.reportOverlayRegion('full')
     space.fillPage(true)
+    space.openPip('https://meet.test/abc-defg-hij')
     expect(posted(parent)).toEqual([
       [{ type: 'twake-embed:login-required' }, 'https://another-space.test'],
       [
@@ -108,6 +110,10 @@ describe('connectToTwakeSpace', () => {
       ],
       [
         { type: 'twake-embed:fill-page', fill: true },
+        'https://another-space.test'
+      ],
+      [
+        { type: 'twake-embed:pip', url: 'https://meet.test/abc-defg-hij' },
         'https://another-space.test'
       ]
     ])

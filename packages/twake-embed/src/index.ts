@@ -15,6 +15,7 @@ export {
   NOTIFICATION_MESSAGE,
   OVERLAY_REGION_MESSAGE,
   PATH_MESSAGE,
+  PIP_MESSAGE,
   READY_MESSAGE,
   badgesMessage,
   fillPageMessage,
@@ -29,7 +30,9 @@ export {
   parseBadges,
   parseHostMessage,
   parseOverlayRegion,
+  parsePipUrl,
   pathMessage,
+  pipMessage,
   readyMessage,
   type AppMessage,
   type Badge,
@@ -46,6 +49,7 @@ export {
   type OverlayRegion,
   type OverlayRegionMessage,
   type PathMessage,
+  type PipMessage,
   type ReadyMessage
 } from './messages.js'
 export {
