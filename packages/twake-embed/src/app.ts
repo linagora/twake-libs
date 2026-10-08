@@ -44,6 +44,12 @@ export interface TwakeSpaceOptions {
   hostOrigins?: readonly string[] | undefined
   /** The shape of a resource id of this app, when it has one */
   isResourceId?: ((resourceId: string) => boolean) | undefined
+  /**
+   * The app routes in the fragment, as a hash router does
+   * (`/#/embed/projects/p1`): the embed route is read from the hash, and
+   * TwakeSpace frames `/#<prefix><resource id>`.
+   */
+  hashRouting?: boolean | undefined
   /** The frame's parent, for tests */
   parent?: Window | undefined
 }
@@ -103,13 +109,21 @@ export function connectToTwakeSpace(
   const {
     embedPrefix,
     hostOrigins,
-    isResourceId = (): boolean => true
+    isResourceId = (): boolean => true,
+    hashRouting = false
   } = options
   const parent = options.parent ?? window.parent
   if (parent === window) return null
   if (hostOrigins !== undefined && hostOrigins.length === 0) return null
 
   const location = (): EmbedLocation | null => {
+    if (hashRouting) {
+      // Split as a hash router does: its pathname ends at the first ? or #
+      const route = window.location.hash.slice(1)
+      const end = route.search(/[?#]/)
+      const pathname = end === -1 ? route : route.slice(0, end)
+      return parseEmbedUrl(embedPrefix, pathname, route.slice(pathname.length))
+    }
     const { pathname, search, hash } = window.location
     return parseEmbedUrl(embedPrefix, pathname, search, hash)
   }

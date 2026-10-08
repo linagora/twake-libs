@@ -66,6 +66,10 @@ it, starting with `/`, `?` or `#`; a `//` or a `\\` in its pathname is refused. 
 reported while its promise is pending. Pass `isResourceId` to refuse ids that
 do not look like the app's.
 
+An app with a hash router (Twake Drive, served by cozy-stack, which knows no
+other path than its files) passes `hashRouting: true`: its embed route is read
+from the hash, and TwakeSpace frames `/#<prefix><resource id>`.
+
 The silent login (`prompt=none`) runs at boot with `location.replace`;
 renewals use a refresh token or a nested frame. When the login is refused:
 

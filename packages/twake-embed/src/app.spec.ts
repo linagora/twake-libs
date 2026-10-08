@@ -349,6 +349,41 @@ describe('connectToTwakeSpace', () => {
     ])
   })
 
+  it('reads the route from the hash for a hash router', () => {
+    const parent = fakeParent()
+    window.history.replaceState(null, '', '/#/embed/projects/p1')
+    space = connectToTwakeSpace({
+      embedPrefix: PREFIX,
+      parent,
+      hashRouting: true
+    })
+    if (!space) throw new Error('not connected')
+    space.syncHistory({ onLoad: vi.fn(), onNavigate: vi.fn() })
+    fromHost(parent, hello)
+
+    window.history.pushState(null, '', '/#/embed/projects/p1/boards/b2?x=1')
+
+    expect(space.location()).toEqual({
+      resourceId: 'p1',
+      path: '/boards/b2?x=1'
+    })
+    expect(posted(parent)).toEqual([
+      [
+        { type: 'twake-embed:path', resourceId: 'p1', path: '', replace: true },
+        HOST
+      ],
+      [
+        {
+          type: 'twake-embed:path',
+          resourceId: 'p1',
+          path: '/boards/b2?x=1',
+          replace: false
+        },
+        HOST
+      ]
+    ])
+  })
+
   it('checks the resource id the app way', () => {
     const parent = fakeParent()
     window.history.replaceState(null, '', '/embed/projects/p1')
