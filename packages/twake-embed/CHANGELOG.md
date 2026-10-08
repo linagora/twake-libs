@@ -1,3 +1,16 @@
+# @linagora/twake-embed [3.0.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@2.1.0...@linagora/twake-embed@3.0.0) (2026-10-08)
+
+
+* feat(twake-embed)!: Drop the theme message ([7d834eb](https://github.com/linagora/twake-libs/commit/7d834eb108ac73d6009a7b6c33755abb1b432540)), closes [twake-space#272](https://github.com/twake-space/issues/272)
+
+
+### BREAKING CHANGES
+
+* `THEME_MESSAGE`, `ThemeMessage` and `themeMessage` are
+gone, and `parseHostMessage` no longer reads `twake-space:theme`.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
 # @linagora/twake-embed [2.1.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@2.0.1...@linagora/twake-embed@2.1.0) (2026-10-07)
 
 
