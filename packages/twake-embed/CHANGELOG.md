@@ -1,3 +1,10 @@
+# @linagora/twake-embed [3.1.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@3.0.0...@linagora/twake-embed@3.1.0) (2026-10-08)
+
+
+### Features
+
+* **twake-embed:** Read the embed route from the hash for hash routers ([87ccb23](https://github.com/linagora/twake-libs/commit/87ccb2317ded6e2ccc96fd38adb192d8de3ba660))
+
 # @linagora/twake-embed [3.0.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@2.1.0...@linagora/twake-embed@3.0.0) (2026-10-08)
 
 
