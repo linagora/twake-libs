@@ -104,13 +104,16 @@ export interface MetadataMessage {
 /**
  * A notification of the system, shown by TwakeSpace for the app: a frame of
  * another origin may not show one (Chat, for a call that rings). One per
- * `tag`: a new one with the same tag replaces it
+ * `tag`: a new one with the same tag replaces it. `resourceId`, the resource
+ * it is about (as in the badges): TwakeSpace opens its space on a click;
+ * without it, the space the frame shows
  */
 export interface NotificationMessage {
   type: typeof NOTIFICATION_MESSAGE
   tag: string
   title: string
   body: string
+  resourceId?: string
 }
 
 /** The notification of that tag is over: TwakeSpace closes it */
@@ -222,6 +225,7 @@ export function notificationMessage(notice: {
   tag: string
   title: string
   body: string
+  resourceId?: string
 }): NotificationMessage {
   return { type: NOTIFICATION_MESSAGE, ...notice }
 }
@@ -441,12 +445,17 @@ export function parseAppMessage(data: unknown): AppMessage | null {
       return metadata === null ? null : metadataMessage(metadata)
     }
     case NOTIFICATION_MESSAGE: {
-      const { tag, title, body } = data
+      const { tag, title, body, resourceId } = data
+      if (resourceId !== undefined && !isTag(resourceId)) return null
       return isTag(tag) &&
         isText(title, MAX_TITLE_LENGTH) &&
         title !== '' &&
         isText(body, MAX_BODY_LENGTH)
-        ? notificationMessage({ tag, title, body })
+        ? notificationMessage(
+            resourceId === undefined
+              ? { tag, title, body }
+              : { tag, title, body, resourceId }
+          )
         : null
     }
     case NOTIFICATION_CLOSE_MESSAGE:
