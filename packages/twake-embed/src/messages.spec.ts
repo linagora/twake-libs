@@ -57,6 +57,31 @@ describe('parseAppMessage', () => {
     ).toBeNull()
   })
 
+  it('reads a call to open in the window of TwakeSpace, http(s) only', () => {
+    expect(
+      parseAppMessage({
+        type: 'twake-embed:pip',
+        url: 'https://meet.test/abc-defg-hij'
+      })
+    ).toEqual({
+      type: 'twake-embed:pip',
+      url: 'https://meet.test/abc-defg-hij'
+    })
+    expect(
+      parseAppMessage({ type: 'twake-embed:pip', url: 'javascript:alert(1)' })
+    ).toBeNull()
+    expect(
+      parseAppMessage({ type: 'twake-embed:pip', url: '/abc-defg-hij' })
+    ).toBeNull()
+    expect(parseAppMessage({ type: 'twake-embed:pip', url: 42 })).toBeNull()
+    expect(
+      parseAppMessage({
+        type: 'twake-embed:pip',
+        url: `https://m/${'a'.repeat(2048)}`
+      })
+    ).toBeNull()
+  })
+
   it('reads the counts of the app for its resources', () => {
     const badges = [
       { resourceId: 'mbx-1', count: 3 },

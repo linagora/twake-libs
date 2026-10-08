@@ -14,6 +14,7 @@ export const READY_MESSAGE = 'twake-embed:ready'
 export const BADGES_MESSAGE = 'twake-embed:badges'
 export const NOTIFICATION_MESSAGE = 'twake-embed:notification'
 export const NOTIFICATION_CLOSE_MESSAGE = 'twake-embed:notification-close'
+export const PIP_MESSAGE = 'twake-embed:pip'
 
 /**
  * The URL of the frame changed. `replace` is true when the app replaced its
@@ -95,6 +96,17 @@ export interface NotificationCloseMessage {
   tag: string
 }
 
+/**
+ * The app asks TwakeSpace to open a call at `url` in its own call window,
+ * floating over its page (a Meet room from an event, from a message).
+ * TwakeSpace decides what it opens: a URL that is not a room of its Meet is
+ * dropped, so the app opens it itself where it is not framed.
+ */
+export interface PipMessage {
+  type: typeof PIP_MESSAGE
+  url: string
+}
+
 /** Show another resource, at `path`, in the same frame */
 export interface LoadMessage {
   type: typeof LOAD_MESSAGE
@@ -127,6 +139,7 @@ export type AppMessage =
   | BadgesMessage
   | NotificationMessage
   | NotificationCloseMessage
+  | PipMessage
 
 /** From TwakeSpace to the app */
 export type HostMessage = HelloMessage | LoadMessage | NavigateMessage
@@ -187,6 +200,10 @@ export function notificationCloseMessage(
   tag: string
 ): NotificationCloseMessage {
   return { type: NOTIFICATION_CLOSE_MESSAGE, tag }
+}
+
+export function pipMessage(url: string): PipMessage {
+  return { type: PIP_MESSAGE, url }
 }
 
 export function loadMessage(resourceId: string, path: string): LoadMessage {
@@ -290,6 +307,21 @@ const isText = (value: unknown, max: number): value is string =>
 const isTag = (value: unknown): value is string =>
   isText(value, MAX_ID_LENGTH) && value !== ''
 
+const MAX_URL_LENGTH = 2_048
+
+/** An absolute http(s) URL of a sane length, as the browser reads it */
+export function parsePipUrl(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > MAX_URL_LENGTH) return null
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? url.href
+      : null
+  } catch {
+    return null
+  }
+}
+
 function isResourceAndPath(
   data: Record<string, unknown>
 ): data is Record<string, unknown> & { resourceId: string; path: string } {
@@ -334,6 +366,10 @@ export function parseAppMessage(data: unknown): AppMessage | null {
     }
     case NOTIFICATION_CLOSE_MESSAGE:
       return isTag(data.tag) ? notificationCloseMessage(data.tag) : null
+    case PIP_MESSAGE: {
+      const url = parsePipUrl(data.url)
+      return url === null ? null : pipMessage(url)
+    }
     default:
       return null
   }

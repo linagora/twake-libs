@@ -23,6 +23,7 @@ import {
   overlayRegionMessage,
   parseHostMessage,
   pathMessage,
+  pipMessage,
   readyMessage,
   type AppMessage,
   type Badge,
@@ -96,6 +97,11 @@ export interface TwakeSpaceConnection {
   notify: (notice: { tag: string; title: string; body: string }) => void
   /** Closes the notification of that tag, when what it told is over */
   closeNotification: (tag: string) => void
+  /**
+   * Asks TwakeSpace to open a call at `url` in its call window, floating
+   * over its page. TwakeSpace opens the rooms of its Meet only.
+   */
+  openPip: (url: string) => void
   /**
    * Leaves the history to TwakeSpace, from now on: a push becomes a replace,
    * every change of the URL is reported (the current one first, as a
@@ -255,6 +261,9 @@ export function connectToTwakeSpace(
     },
     closeNotification: (tag): void => {
       post(notificationCloseMessage(tag))
+    },
+    openPip: (url): void => {
+      post(pipMessage(url))
     },
     syncHistory,
     disconnect: (): void => {
