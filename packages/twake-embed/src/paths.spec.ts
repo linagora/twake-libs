@@ -81,4 +81,12 @@ describe('embedUrl', () => {
     expect(staysBelow('/embed/projects/p1', '/boards/b1')).toBe(true)
     expect(staysBelow('/embed/projects/p1', '/../p2')).toBe(false)
   })
+
+  it('frames a hash route, and refuses a path that leaves it', () => {
+    expect(embedUrl(APP, '/#/embed/projects/p1', '/boards/b1?x=1')).toBe(
+      'https://tasks.test/#/embed/projects/p1/boards/b1?x=1'
+    )
+    expect(embedUrl(APP, '/#/embed/projects/p1', '/../../admin')).toBeNull()
+    expect(embedUrl(APP, '/#/embed/projects/p1', '/%2e%2e/x')).toBeNull()
+  })
 })

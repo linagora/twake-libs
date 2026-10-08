@@ -72,6 +72,15 @@ export function embedUrl(
   path: string
 ): string | null {
   if (!isBelow(path)) return null
+  // A hash route ('/#/embed/projects/p1'): a URL keeps its fragment as
+  // written, so the route in it is resolved on its own
+  const fragment = embedPath.indexOf('#')
+  if (
+    fragment !== -1 &&
+    embedUrl(appUrl, embedPath.slice(fragment + 1), path) === null
+  ) {
+    return null
+  }
   let url: URL
   try {
     url = new URL(embedPath + path, appUrl)
