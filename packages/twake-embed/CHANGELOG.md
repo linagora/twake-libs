@@ -1,3 +1,10 @@
+# @linagora/twake-embed [3.3.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@3.2.0...@linagora/twake-embed@3.3.0) (2026-10-08)
+
+
+### Features
+
+* **twake-embed:** Let an app open a call in the window of TwakeSpace ([1a899b0](https://github.com/linagora/twake-libs/commit/1a899b0ce971b4154f4c95d5661564409e872ba3))
+
 # @linagora/twake-embed [3.2.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@3.1.0...@linagora/twake-embed@3.2.0) (2026-10-08)
 
 
