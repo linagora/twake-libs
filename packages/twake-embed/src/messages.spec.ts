@@ -92,6 +92,37 @@ describe('parseAppMessage', () => {
     )
   })
 
+  it('reads a notification to show, and one to close', () => {
+    const notice = { tag: 'call:!r', title: 'Alice', body: 'is calling you' }
+    expect(
+      parseAppMessage({ type: 'twake-embed:notification', ...notice })
+    ).toEqual({ type: 'twake-embed:notification', ...notice })
+    expect(
+      parseAppMessage({
+        type: 'twake-embed:notification-close',
+        tag: 'call:!r'
+      })
+    ).toEqual({ type: 'twake-embed:notification-close', tag: 'call:!r' })
+  })
+
+  it('refuses notifications that do not fit', () => {
+    const refused = (data: Record<string, unknown>): void => {
+      expect(
+        parseAppMessage({ type: 'twake-embed:notification', ...data })
+      ).toBeNull()
+    }
+    const notice = { tag: 't', title: 'Alice', body: '' }
+    refused({ ...notice, tag: '' })
+    refused({ ...notice, tag: 'x'.repeat(257) })
+    refused({ ...notice, title: '' })
+    refused({ ...notice, title: 'x'.repeat(257) })
+    refused({ ...notice, body: 'x'.repeat(1_001) })
+    refused({ ...notice, body: 3 })
+    expect(
+      parseAppMessage({ type: 'twake-embed:notification-close', tag: '' })
+    ).toBeNull()
+  })
+
   it('ignores anything else', () => {
     expect(parseAppMessage(null)).toBeNull()
     expect(parseAppMessage('twake-embed:path')).toBeNull()

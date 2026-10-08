@@ -12,6 +12,8 @@ export const FILL_PAGE_MESSAGE = 'twake-embed:fill-page'
 export const HELLO_MESSAGE = 'twake-embed:hello'
 export const READY_MESSAGE = 'twake-embed:ready'
 export const BADGES_MESSAGE = 'twake-embed:badges'
+export const NOTIFICATION_MESSAGE = 'twake-embed:notification'
+export const NOTIFICATION_CLOSE_MESSAGE = 'twake-embed:notification-close'
 
 /**
  * The URL of the frame changed. `replace` is true when the app replaced its
@@ -75,6 +77,24 @@ export interface BadgesMessage {
   badges: readonly Badge[]
 }
 
+/**
+ * A notification of the system, shown by TwakeSpace for the app: a frame of
+ * another origin may not show one (Chat, for a call that rings). One per
+ * `tag`: a new one with the same tag replaces it
+ */
+export interface NotificationMessage {
+  type: typeof NOTIFICATION_MESSAGE
+  tag: string
+  title: string
+  body: string
+}
+
+/** The notification of that tag is over: TwakeSpace closes it */
+export interface NotificationCloseMessage {
+  type: typeof NOTIFICATION_CLOSE_MESSAGE
+  tag: string
+}
+
 /** Show another resource, at `path`, in the same frame */
 export interface LoadMessage {
   type: typeof LOAD_MESSAGE
@@ -105,6 +125,8 @@ export type AppMessage =
   | OverlayRegionMessage
   | FillPageMessage
   | BadgesMessage
+  | NotificationMessage
+  | NotificationCloseMessage
 
 /** From TwakeSpace to the app */
 export type HostMessage = HelloMessage | LoadMessage | NavigateMessage
@@ -151,6 +173,20 @@ export function fillPageMessage(fill: boolean): FillPageMessage {
 
 export function badgesMessage(badges: readonly Badge[]): BadgesMessage {
   return { type: BADGES_MESSAGE, badges }
+}
+
+export function notificationMessage(notice: {
+  tag: string
+  title: string
+  body: string
+}): NotificationMessage {
+  return { type: NOTIFICATION_MESSAGE, ...notice }
+}
+
+export function notificationCloseMessage(
+  tag: string
+): NotificationCloseMessage {
+  return { type: NOTIFICATION_CLOSE_MESSAGE, tag }
 }
 
 export function loadMessage(resourceId: string, path: string): LoadMessage {
@@ -245,6 +281,15 @@ export function parseBadges(value: unknown): Badge[] | null {
   return badges
 }
 
+const MAX_TITLE_LENGTH = 256
+const MAX_BODY_LENGTH = 1_000
+
+const isText = (value: unknown, max: number): value is string =>
+  typeof value === 'string' && value.length <= max
+
+const isTag = (value: unknown): value is string =>
+  isText(value, MAX_ID_LENGTH) && value !== ''
+
 function isResourceAndPath(
   data: Record<string, unknown>
 ): data is Record<string, unknown> & { resourceId: string; path: string } {
@@ -278,6 +323,17 @@ export function parseAppMessage(data: unknown): AppMessage | null {
       const badges = parseBadges(data.badges)
       return badges === null ? null : badgesMessage(badges)
     }
+    case NOTIFICATION_MESSAGE: {
+      const { tag, title, body } = data
+      return isTag(tag) &&
+        isText(title, MAX_TITLE_LENGTH) &&
+        title !== '' &&
+        isText(body, MAX_BODY_LENGTH)
+        ? notificationMessage({ tag, title, body })
+        : null
+    }
+    case NOTIFICATION_CLOSE_MESSAGE:
+      return isTag(data.tag) ? notificationCloseMessage(data.tag) : null
     default:
       return null
   }

@@ -154,6 +154,28 @@ describe('connectToTwakeSpace', () => {
     space?.disconnect()
   })
 
+  it('asks the host to show a notification and to close it, never again later', () => {
+    const parent = fakeParent()
+    const space = connect(parent)
+    const notice = { tag: 'call:!r', title: 'Alice', body: 'is calling you' }
+
+    // Of the moment: lost before the host greets
+    space?.notify(notice)
+    fromHost(parent, hello)
+    expect(posted(parent)).not.toContainEqual([
+      { type: 'twake-embed:notification', ...notice },
+      HOST
+    ])
+
+    space?.notify(notice)
+    space?.closeNotification('call:!r')
+    expect(posted(parent).slice(-2)).toEqual([
+      [{ type: 'twake-embed:notification', ...notice }, HOST],
+      [{ type: 'twake-embed:notification-close', tag: 'call:!r' }, HOST]
+    ])
+    space?.disconnect()
+  })
+
   it('keeps to the hosts given, when some are', () => {
     const parent = fakeParent()
     space = connect(parent, '/embed/projects/p1', [HOST])
