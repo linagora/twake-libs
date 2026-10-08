@@ -1,3 +1,10 @@
+# @linagora/twake-embed [3.2.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@3.1.0...@linagora/twake-embed@3.2.0) (2026-10-08)
+
+
+### Features
+
+* **twake-embed:** Ask TwakeSpace to show a notification for the app ([e6998b3](https://github.com/linagora/twake-libs/commit/e6998b370338f99eadcb655523aceff931b1d35e))
+
 # @linagora/twake-embed [3.1.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@3.0.0...@linagora/twake-embed@3.1.0) (2026-10-08)
 
 
