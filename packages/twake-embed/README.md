@@ -130,6 +130,24 @@ space?.reportBadges([
 ])
 ```
 
+The metadata: what the app knows of its resources, shown by TwakeSpace on
+the tabs and the home of each space: the count on the tab (`badge`), the
+tasks done in a project, the files of a drive. Like the badges, the entries
+are keyed by resource id, cover every resource the app knows, and each call
+replaces the previous ones; an entry left out is not known yet. The names are
+agreed with TwakeSpace, lowercase and dotted; a value is a whole number or a
+short text. Once an app reports metadata, TwakeSpace reads its tab counts from
+the `badge` entries, and `reportBadges` is only for TwakeSpace builds that do
+not read metadata yet:
+
+```ts
+space?.reportMetadata([
+  { resourceId: 'p1', name: 'badge', value: 3 },
+  { resourceId: 'p1', name: 'tasks.done', value: 12 },
+  { resourceId: 'p1', name: 'tasks.total', value: 20 }
+])
+```
+
 The notifications: a frame of another origin may not show a notification of
 the system, the browser refuses it even when the app has the permission.
 TwakeSpace shows it for the app (Chat, for a call that rings). One per tag: a
@@ -149,7 +167,9 @@ import { helloMessage, parseAppMessage, loadMessage, navigateMessage, embedUrl }
 TwakeSpace posts `helloMessage()` to a frame on each of its `load` events
 and in answer to its `twake-embed:ready`, with the app's origin as target. `parseAppMessage` reads what a frame sends,
 once the origin and the source window are checked; a `twake-embed:badges`
-message holds the app's counts by resource id, and a `twake-embed:pip`
+message holds the app's counts by resource id, a `twake-embed:metadata`
+message its metadata by resource id and name (its counts too, under `badge`,
+which then win over its `badges`), and a `twake-embed:pip`
 message a call the app asks TwakeSpace to open in its call window, to check
 against its Meet before it does. `embedUrl` builds the frame's `src` for a resource at a
 path, and refuses a path that leaves the embed route.

@@ -12,6 +12,7 @@ export const FILL_PAGE_MESSAGE = 'twake-embed:fill-page'
 export const HELLO_MESSAGE = 'twake-embed:hello'
 export const READY_MESSAGE = 'twake-embed:ready'
 export const BADGES_MESSAGE = 'twake-embed:badges'
+export const METADATA_MESSAGE = 'twake-embed:metadata'
 export const NOTIFICATION_MESSAGE = 'twake-embed:notification'
 export const NOTIFICATION_CLOSE_MESSAGE = 'twake-embed:notification-close'
 export const PIP_MESSAGE = 'twake-embed:pip'
@@ -79,6 +80,28 @@ export interface BadgesMessage {
 }
 
 /**
+ * What the app knows of one of its resources, by name: its count on the tab
+ * (`badge`), the tasks done in a project, the files of a drive. The names
+ * are agreed with TwakeSpace.
+ */
+export interface Metadata {
+  resourceId: string
+  name: string
+  value: number | string
+}
+
+/**
+ * The metadata of the app for every resource it knows, shown on the tabs and
+ * the home of each space. Each message replaces the previous one; an entry
+ * left out is not known. Once an app sends it, TwakeSpace reads its tab
+ * counts from the `badge` entries rather than from `twake-embed:badges`.
+ */
+export interface MetadataMessage {
+  type: typeof METADATA_MESSAGE
+  metadata: readonly Metadata[]
+}
+
+/**
  * A notification of the system, shown by TwakeSpace for the app: a frame of
  * another origin may not show one (Chat, for a call that rings). One per
  * `tag`: a new one with the same tag replaces it
@@ -137,6 +160,7 @@ export type AppMessage =
   | OverlayRegionMessage
   | FillPageMessage
   | BadgesMessage
+  | MetadataMessage
   | NotificationMessage
   | NotificationCloseMessage
   | PipMessage
@@ -186,6 +210,12 @@ export function fillPageMessage(fill: boolean): FillPageMessage {
 
 export function badgesMessage(badges: readonly Badge[]): BadgesMessage {
   return { type: BADGES_MESSAGE, badges }
+}
+
+export function metadataMessage(
+  metadata: readonly Metadata[]
+): MetadataMessage {
+  return { type: METADATA_MESSAGE, metadata }
 }
 
 export function notificationMessage(notice: {
@@ -298,6 +328,57 @@ export function parseBadges(value: unknown): Badge[] | null {
   return badges
 }
 
+const MAX_METADATA = 1_000
+const METADATA_NAME = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/
+const MAX_NAME_LENGTH = 64
+const MAX_VALUE_LENGTH = 256
+
+function isMetadataValue(value: unknown): value is number | string {
+  if (typeof value === 'string') return value.length <= MAX_VALUE_LENGTH
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= MAX_COUNT
+  )
+}
+
+function toMetadata(value: unknown): Metadata | null {
+  if (!isRecord(value)) return null
+  const { resourceId, name, value: entry } = value
+  if (
+    typeof resourceId !== 'string' ||
+    resourceId === '' ||
+    resourceId.length > MAX_ID_LENGTH
+  ) {
+    return null
+  }
+  if (
+    typeof name !== 'string' ||
+    name.length > MAX_NAME_LENGTH ||
+    !METADATA_NAME.test(name)
+  ) {
+    return null
+  }
+  return isMetadataValue(entry) ? { resourceId, name, value: entry } : null
+}
+
+/**
+ * Metadata as reported, bounded: at most 1000 entries, each a dotted
+ * lowercase name and a whole value from 0 to a million or a text of at most
+ * 256 characters
+ */
+export function parseMetadata(value: unknown): Metadata[] | null {
+  if (!Array.isArray(value) || value.length > MAX_METADATA) return null
+  const metadata: Metadata[] = []
+  for (const item of value) {
+    const entry = toMetadata(item)
+    if (entry === null) return null
+    metadata.push(entry)
+  }
+  return metadata
+}
+
 const MAX_TITLE_LENGTH = 256
 const MAX_BODY_LENGTH = 1_000
 
@@ -354,6 +435,10 @@ export function parseAppMessage(data: unknown): AppMessage | null {
     case BADGES_MESSAGE: {
       const badges = parseBadges(data.badges)
       return badges === null ? null : badgesMessage(badges)
+    }
+    case METADATA_MESSAGE: {
+      const metadata = parseMetadata(data.metadata)
+      return metadata === null ? null : metadataMessage(metadata)
     }
     case NOTIFICATION_MESSAGE: {
       const { tag, title, body } = data

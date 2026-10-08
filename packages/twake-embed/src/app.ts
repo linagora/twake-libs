@@ -16,6 +16,7 @@
 // mandatory. `hostOrigins` restricts the hosts further, when given.
 import {
   badgesMessage,
+  metadataMessage,
   notificationCloseMessage,
   notificationMessage,
   fillPageMessage,
@@ -27,6 +28,7 @@ import {
   readyMessage,
   type AppMessage,
   type Badge,
+  type Metadata,
   type OverlayRegion
 } from './messages.js'
 import {
@@ -90,6 +92,13 @@ export interface TwakeSpaceConnection {
    */
   reportBadges: (badges: readonly Badge[]) => void
   /**
+   * The metadata of the app for every resource it knows, its tab counts
+   * (`badge`) included, shown on the tabs and the home of each space: each
+   * call replaces the previous metadata. The last ones are sent again to a
+   * host that greets the frame later.
+   */
+  reportMetadata: (metadata: readonly Metadata[]) => void
+  /**
    * A notification of the system, shown by TwakeSpace: a frame of another
    * origin may not show one. A new one with the same `tag` replaces it.
    * Not sent again to a host that greets later: it is of the moment.
@@ -152,6 +161,7 @@ export function connectToTwakeSpace(
 
   // Sent again to a host learnt later: the app reports them on change only
   let badges: readonly Badge[] | null = null
+  let metadata: readonly Metadata[] | null = null
 
   let handlers: HistoryHandlers | null = null
   let stop: (() => void) | null = null
@@ -183,6 +193,7 @@ export function connectToTwakeSpace(
       origin = event.origin
       reportCurrent(true)
       if (badges !== null) post(badgesMessage(badges))
+      if (metadata !== null) post(metadataMessage(metadata))
     }
     if (message.type === 'twake-embed:hello') return
     const { resourceId, path } = message
@@ -255,6 +266,10 @@ export function connectToTwakeSpace(
     reportBadges: (next): void => {
       badges = next
       post(badgesMessage(next))
+    },
+    reportMetadata: (next): void => {
+      metadata = next
+      post(metadataMessage(next))
     },
     notify: (notice): void => {
       post(notificationMessage(notice))
