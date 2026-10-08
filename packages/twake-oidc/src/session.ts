@@ -8,6 +8,14 @@ export type TokenSet = TokenEndpointResponse & TokenEndpointResponseHelpers
 const CHANNEL_NAME = 'twake-oidc-session'
 const SESSION_ENDED = 'session-ended'
 
+// Generate a unique ID per tab instance
+const TAB_ID = Math.random().toString(36).substring(2)
+
+interface SessionMessage {
+  type: typeof SESSION_ENDED
+  senderId: string
+}
+
 /**
  * The tokens of the session, held in memory only: web storage is readable by
  * any script of the page, so a single XSS would hand them over for replay
@@ -37,7 +45,8 @@ export function clearTokenSet(): void {
 export function endLocalSession(): void {
   clearTokenSet()
   const channel = new BroadcastChannel(CHANNEL_NAME)
-  channel.postMessage(SESSION_ENDED)
+  const message: SessionMessage = { type: SESSION_ENDED, senderId: TAB_ID }
+  channel.postMessage(message)
   channel.close()
 }
 
@@ -49,8 +58,9 @@ export function endLocalSession(): void {
  */
 export function onSessionEndedElsewhere(onEnded: () => void): () => void {
   const channel = new BroadcastChannel(CHANNEL_NAME)
-  channel.onmessage = (event: MessageEvent): void => {
-    if (event.data === SESSION_ENDED) {
+  channel.onmessage = (event: MessageEvent<SessionMessage>): void => {
+    // Only react if the message came from a DIFFERENT tab
+    if (event.data?.type === SESSION_ENDED && event.data?.senderId !== TAB_ID) {
       clearTokenSet()
       onEnded()
     }
