@@ -14,7 +14,11 @@ export interface BarApp {
   name: string
   /** URL of the app icon, served by the host */
   icon: string
-  /** URL of the app text logo, served by the host */
+  /**
+   * URL of the app text logo, served by the host. Rendered at its intrinsic
+   * size with its top on the wordmark's, so size it against the 22px wordmark
+   * box and let descenders extend below it.
+   */
   textIcon?: string
 }
 
@@ -48,7 +52,14 @@ const Wordmark = styled(TwakeText)(({ theme }) => ({
   fill: '#000',
   ...theme.applyStyles('dark', { fill: '#fff' })
 }))
-const AppTextIcon = styled('img')({ height: 22, width: 'auto' })
+// Intrinsic size, top aligned on the wordmark: a text logo with descenders
+// ("Space", "Project") is taller than the 22px box and hangs below it
+const AppTextIcon = styled('img')({
+  width: 'auto',
+  height: 'auto',
+  alignSelf: 'flex-start',
+  marginTop: 5
+})
 
 const loadHomeURL = (sdk: Sdk): Promise<string | null> => sdk.getAppURL('home')
 
