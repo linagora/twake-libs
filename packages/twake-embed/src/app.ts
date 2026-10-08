@@ -16,6 +16,8 @@
 // mandatory. `hostOrigins` restricts the hosts further, when given.
 import {
   badgesMessage,
+  notificationCloseMessage,
+  notificationMessage,
   fillPageMessage,
   loginRequiredMessage,
   overlayRegionMessage,
@@ -86,6 +88,14 @@ export interface TwakeSpaceConnection {
    * sent again to a host that greets the frame later.
    */
   reportBadges: (badges: readonly Badge[]) => void
+  /**
+   * A notification of the system, shown by TwakeSpace: a frame of another
+   * origin may not show one. A new one with the same `tag` replaces it.
+   * Not sent again to a host that greets later: it is of the moment.
+   */
+  notify: (notice: { tag: string; title: string; body: string }) => void
+  /** Closes the notification of that tag, when what it told is over */
+  closeNotification: (tag: string) => void
   /**
    * Leaves the history to TwakeSpace, from now on: a push becomes a replace,
    * every change of the URL is reported (the current one first, as a
@@ -239,6 +249,12 @@ export function connectToTwakeSpace(
     reportBadges: (next): void => {
       badges = next
       post(badgesMessage(next))
+    },
+    notify: (notice): void => {
+      post(notificationMessage(notice))
+    },
+    closeNotification: (tag): void => {
+      post(notificationCloseMessage(tag))
     },
     syncHistory,
     disconnect: (): void => {
