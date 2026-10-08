@@ -117,6 +117,38 @@ describe('parseAppMessage', () => {
     )
   })
 
+  it('reads the metadata of the app for its resources', () => {
+    const metadata = [
+      { resourceId: 'p1', name: 'badge', value: 2 },
+      { resourceId: 'p1', name: 'tasks.done', value: 0 },
+      { resourceId: 'c1', name: 'events.next', value: 'Weekly sync' }
+    ]
+    expect(parseAppMessage({ type: 'twake-embed:metadata', metadata })).toEqual(
+      { type: 'twake-embed:metadata', metadata }
+    )
+  })
+
+  it('refuses metadata that does not fit', () => {
+    const refused = (metadata: unknown): void => {
+      expect(
+        parseAppMessage({ type: 'twake-embed:metadata', metadata })
+      ).toBeNull()
+    }
+    const entry = { resourceId: 'p1', name: 'tasks.done', value: 1 }
+    refused(undefined)
+    refused([{ ...entry, value: -1 }])
+    refused([{ ...entry, value: 1.5 }])
+    refused([{ ...entry, value: 1_000_001 }])
+    refused([{ ...entry, value: 'x'.repeat(257) }])
+    refused([{ ...entry, value: true }])
+    refused([{ ...entry, name: '' }])
+    refused([{ ...entry, name: 'Tasks.Done' }])
+    refused([{ ...entry, name: 'tasks..done' }])
+    refused([{ ...entry, name: 'a'.repeat(65) }])
+    refused([{ ...entry, resourceId: '' }])
+    refused(Array.from({ length: 1_001 }, () => entry))
+  })
+
   it('reads a notification to show, and one to close', () => {
     const notice = { tag: 'call:!r', title: 'Alice', body: 'is calling you' }
     expect(

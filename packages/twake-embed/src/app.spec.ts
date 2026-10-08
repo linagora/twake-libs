@@ -160,6 +160,22 @@ describe('connectToTwakeSpace', () => {
     space?.disconnect()
   })
 
+  it('reports the metadata, and the last ones again to a host that greets later', () => {
+    const parent = fakeParent()
+    const space = connect(parent)
+    const metadata = [{ resourceId: 'p1', name: 'badge', value: 2 }]
+
+    space?.reportMetadata(metadata)
+    expect(posted(parent)).toEqual([])
+
+    fromHost(parent, hello)
+    expect(posted(parent)).toContainEqual([
+      { type: 'twake-embed:metadata', metadata },
+      HOST
+    ])
+    space?.disconnect()
+  })
+
   it('asks the host to show a notification and to close it, never again later', () => {
     const parent = fakeParent()
     const space = connect(parent)
