@@ -1,3 +1,10 @@
+## @linagora/twake-bar [1.0.2](https://github.com/linagora/twake-libs/compare/@linagora/twake-bar@1.0.1...@linagora/twake-bar@1.0.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **twake-bar:** Render the text icon at its intrinsic size ([1ec302b](https://github.com/linagora/twake-libs/commit/1ec302bd082fcc7865f7d56feb4f4f93ffd867d0))
+
 ## @linagora/twake-bar [1.0.1](https://github.com/linagora/twake-libs/compare/@linagora/twake-bar@1.0.0...@linagora/twake-bar@1.0.1) (2026-10-07)
 
 
