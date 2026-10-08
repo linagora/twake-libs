@@ -135,18 +135,20 @@ export async function completeLogin(): Promise<LoginResult | null> {
  * Ends the session here and on the SSO, then leaves the application.
  */
 export async function logOut(): Promise<void> {
-  // The tokens are dropped, here and in the other tabs, before anything else:
-  // even if the SSO cannot be reached, this browser no longer holds a
-  // session.
-  endLocalSession()
   try {
-    const endSessionUrl = client.buildEndSessionUrl(await discover(), {
+    const configuration = await discover()
+    const endSessionUrl = client.buildEndSessionUrl(configuration, {
       post_logout_redirect_uri: getAuthConfig().postLogoutRedirectUri
     })
+
+    endLocalSession()
+
     window.location.assign(endSessionUrl)
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Logout failed:', error)
+
+    endLocalSession()
     window.location.assign('/')
   }
 }
