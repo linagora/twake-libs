@@ -1,3 +1,10 @@
+# @linagora/twake-embed [3.5.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@3.4.0...@linagora/twake-embed@3.5.0) (2026-10-08)
+
+
+### Features
+
+* **twake-embed:** Say which resource a notification is about ([1c25864](https://github.com/linagora/twake-libs/commit/1c258646ba156444c5e99f95ebae28d8739c3542))
+
 # @linagora/twake-embed [3.4.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-embed@3.3.0...@linagora/twake-embed@3.4.0) (2026-10-08)
 
 
