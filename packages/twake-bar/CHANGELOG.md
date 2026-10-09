@@ -1,3 +1,12 @@
+## @linagora/twake-bar [1.0.3](https://github.com/linagora/twake-libs/compare/@linagora/twake-bar@1.0.2...@linagora/twake-bar@1.0.3) (2026-10-09)
+
+
+### Bug Fixes
+
+* **twake-bar:** Draw the bottom line of the bar ([ffa9926](https://github.com/linagora/twake-libs/commit/ffa9926aec122d0c15ebfc227a1e5b17f33d4888))
+* **twake-bar:** Read the entrypoint flags nested in an object ([1d4a073](https://github.com/linagora/twake-libs/commit/1d4a0735ed509824a1b64300909b949eaef91cde))
+* **twake-bar:** Space the user menu icons by the MenuItem gap alone ([d904eb3](https://github.com/linagora/twake-libs/commit/d904eb3e06c0edd3c2dda59370f46f6422f172b5))
+
 ## @linagora/twake-bar [1.0.2](https://github.com/linagora/twake-libs/compare/@linagora/twake-bar@1.0.1...@linagora/twake-bar@1.0.2) (2026-10-08)
 
 
