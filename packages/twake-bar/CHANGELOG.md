@@ -1,3 +1,11 @@
+# @linagora/twake-bar [1.1.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-bar@1.0.3...@linagora/twake-bar@1.1.0) (2026-10-09)
+
+
+### Features
+
+* **twake-bar:** Hide the home button off the platform ([c39bcf7](https://github.com/linagora/twake-libs/commit/c39bcf735401778ddbfe16cf5ea0ec3f04c54926))
+* **twake-bar:** Show the host's fallbacks off the platform ([874cb6a](https://github.com/linagora/twake-libs/commit/874cb6a0d420805a1e72fbf943391c9d07468749))
+
 ## @linagora/twake-bar [1.0.3](https://github.com/linagora/twake-libs/compare/@linagora/twake-bar@1.0.2...@linagora/twake-bar@1.0.3) (2026-10-09)
 
 
