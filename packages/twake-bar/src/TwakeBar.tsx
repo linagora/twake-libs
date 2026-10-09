@@ -37,6 +37,7 @@ const Root = styled('header')(({ theme }) => ({
   padding: '0 1.25rem 0 1rem',
   backgroundColor: theme.vars.palette.background.paper,
   color: theme.vars.palette.text.primary,
+  boxShadow: `inset 0 -1px 0 ${theme.vars.palette.divider}`,
   [theme.breakpoints.down('md')]: {
     padding: '0 1rem 0 0'
   }
