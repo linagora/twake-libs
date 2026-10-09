@@ -23,10 +23,11 @@ export const useSdk = (): Sdk => {
   return sdk
 }
 
+/** `public` without a SdkProvider: the bar is off the platform */
 export const useSdkStatus = (): SdkStatus => {
-  const sdk = useSdk()
+  const sdk = useContext(SdkContext)
   return useSyncExternalStore(
-    listener => sdk.onStatusChange(listener),
-    () => sdk.status
+    listener => (sdk ? sdk.onStatusChange(listener) : (): void => undefined),
+    () => sdk?.status ?? 'public'
   )
 }

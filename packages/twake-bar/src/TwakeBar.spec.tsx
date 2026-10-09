@@ -87,4 +87,64 @@ describe('TwakeBar', () => {
     expect(onLogOut).toHaveBeenCalledTimes(1)
   })
 
+  describe('off the platform', () => {
+    const FALLBACK = {
+      helpLink: 'https://support.example',
+      apps: [
+        {
+          name: 'Mail',
+          href: 'https://mail.example/',
+          icon: 'https://mail.example/icon.svg'
+        }
+      ],
+      user: { name: 'Alice Martin', email: 'alice@example.com' }
+    }
+
+    it('shows the fallbacks without a client', async () => {
+      const onLogOut = vi.fn()
+      const user = userEvent.setup()
+      renderWithSdk(
+        <TwakeBar app={APP} onLogOut={onLogOut} fallback={FALLBACK} />
+      )
+
+      expect(screen.queryByTestId('twake-bar-home')).toBe(null)
+      expect(screen.getByRole('link', { name: 'Help' })).toHaveAttribute(
+        'href',
+        'https://support.example'
+      )
+
+      await user.click(screen.getByTestId('twake-bar-apps-button'))
+      expect(await screen.findByTitle('Mail')).toHaveAttribute(
+        'href',
+        'https://mail.example/'
+      )
+      await user.keyboard('{Escape}')
+
+      await user.click(screen.getByTestId('twake-bar-user-button'))
+      expect(await screen.findByText('alice@example.com')).toBeInTheDocument()
+      await user.click(screen.getByTestId('twake-bar-logout'))
+      expect(onLogOut).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps the log out without a user', async () => {
+      const user = userEvent.setup()
+      renderWithSdk(<TwakeBar app={APP} onLogOut={vi.fn()} fallback={{}} />)
+
+      expect(screen.queryByTestId('twake-bar-apps-button')).toBe(null)
+      expect(screen.queryByRole('link', { name: 'Help' })).toBe(null)
+      await user.click(screen.getByTestId('twake-bar-user-button'))
+      expect(await screen.findByTestId('twake-bar-logout')).toBeInTheDocument()
+    })
+
+    it('replaces the fallbacks by the platform once ready', async () => {
+      renderBar(makeSdk({ context: { help_link: 'https://help.example' } }), {
+        fallback: FALLBACK
+      })
+
+      expect(await screen.findByRole('link', { name: 'Help' })).toHaveAttribute(
+        'href',
+        'https://help.example'
+      )
+    })
+  })
 })

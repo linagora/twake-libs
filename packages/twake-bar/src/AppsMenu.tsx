@@ -16,6 +16,14 @@ import {
 import { useBarLocales } from './useBarLocales'
 import { useSdkData } from './useSdkData'
 
+/** An app of the menu off the platform, served by the host */
+export interface BarFallbackApp {
+  name: string
+  href: string
+  /** URL of the app icon */
+  icon: string
+}
+
 const HOME_SLUG = 'home'
 const SORT_FLAG = 'apps.sort'
 
@@ -244,7 +252,11 @@ const AppsMenuContent = ({
   )
 }
 
-export const AppsMenu = (): React.ReactElement => {
+const AppsMenuButton = ({
+  children
+}: {
+  children: (close: () => void) => React.ReactNode
+}): React.ReactElement => {
   useBarLocales()
   const { t } = useI18n()
 
@@ -254,7 +266,34 @@ export const AppsMenu = (): React.ReactElement => {
       trigger={<Icon icon={Mosaic} size="18" />}
       data-testid="twake-bar-apps-button"
     >
-      {close => <AppsMenuContent close={close} />}
+      {children}
     </BarMenu>
   )
 }
+
+export const AppsMenu = (): React.ReactElement => (
+  <AppsMenuButton>{close => <AppsMenuContent close={close} />}</AppsMenuButton>
+)
+
+/** The apps given by the host, off the platform */
+export const FallbackAppsMenu = ({
+  apps
+}: {
+  apps: BarFallbackApp[]
+}): React.ReactElement => (
+  <AppsMenuButton>
+    {close => (
+      <Grid data-testid="twake-bar-apps">
+        {apps.map(app => (
+          <Item
+            key={app.href}
+            href={app.href}
+            title={app.name}
+            icon={<ItemIcon src={app.icon} alt="" />}
+            onClick={close}
+          />
+        ))}
+      </Grid>
+    )}
+  </AppsMenuButton>
+)

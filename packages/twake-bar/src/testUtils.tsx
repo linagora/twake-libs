@@ -82,11 +82,15 @@ export function makeSdk({
   }
 }
 
-export const renderWithSdk = (ui: React.ReactElement, sdk: Sdk): RenderResult =>
+/** Without `sdk`, renders off the platform: no SdkProvider */
+export const renderWithSdk = (
+  ui: React.ReactElement,
+  sdk?: Sdk
+): RenderResult =>
   render(
     <TwakeMuiThemeProvider>
       <I18n lang="en" dictRequire={(): Record<string, unknown> => ({})}>
-        <SdkProvider client={sdk}>{ui}</SdkProvider>
+        {sdk ? <SdkProvider client={sdk}>{ui}</SdkProvider> : ui}
       </I18n>
     </TwakeMuiThemeProvider>
   )
