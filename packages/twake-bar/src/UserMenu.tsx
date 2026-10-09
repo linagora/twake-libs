@@ -14,6 +14,8 @@ import {
   MenuItem,
   MenuList,
   Typography,
+  getInitials,
+  nameToColor,
   styled,
   useBreakpoints
 } from '@linagora/twake-mui'
@@ -29,6 +31,12 @@ import { useBarLocales } from './useBarLocales'
 import { useSdkData } from './useSdkData'
 
 const SETTINGS_SLUG = 'settings'
+
+/** The user off the platform, from the host's SSO */
+export interface BarFallbackUser {
+  name: string
+  email: string
+}
 
 interface UserMenuData {
   instance: Instance | null
@@ -104,6 +112,23 @@ const Centered = styled('div')(({ theme }) => ({
   justifyContent: 'center',
   marginTop: theme.spacing(1)
 }))
+
+const LogOutItem = ({
+  onClick
+}: {
+  onClick: () => void
+}): React.ReactElement => {
+  const { t } = useI18n()
+
+  return (
+    <MenuItem onClick={onClick} data-testid="twake-bar-logout">
+      <ListItemIcon>
+        <Icon icon={Logout} />
+      </ListItemIcon>
+      <ListItemText primary={t('twakeBar.logOut')} />
+    </MenuItem>
+  )
+}
 
 export interface UserMenuProps {
   onLogOut: () => void
@@ -183,12 +208,7 @@ const UserMenuContent = ({
           </MenuItem>
         )}
         <Divider component="li" variant="inset" />
-        <MenuItem onClick={handleLogOut} data-testid="twake-bar-logout">
-          <ListItemIcon>
-            <Icon icon={Logout} />
-          </ListItemIcon>
-          <ListItemText primary={t('twakeBar.logOut')} />
-        </MenuItem>
+        <LogOutItem onClick={handleLogOut} />
       </Entries>
     </Content>
   )
@@ -221,6 +241,66 @@ export const UserMenu = ({
           />
         )
       }
+    </BarMenu>
+  )
+}
+
+const FallbackAvatar = ({
+  user,
+  size
+}: {
+  user?: BarFallbackUser
+  size: number
+}): React.ReactElement => (
+  <Avatar size={size} color={nameToColor(user?.name)}>
+    {user ? getInitials(user.name, user.email) : null}
+  </Avatar>
+)
+
+/**
+ * The account off the platform: the user given by the host, when there is
+ * one, and the log out in any case
+ */
+export const FallbackUserMenu = ({
+  user,
+  onLogOut
+}: {
+  user?: BarFallbackUser
+  onLogOut: () => void
+}): React.ReactElement => {
+  useBarLocales()
+  const { t } = useI18n()
+  const { isMobile } = useBreakpoints()
+
+  return (
+    <BarMenu
+      label={t('twakeBar.userMenu')}
+      trigger={<FallbackAvatar user={user} size={isMobile ? 24 : 32} />}
+      data-testid="twake-bar-user-button"
+    >
+      {close => (
+        <Content data-testid="twake-bar-user-menu">
+          {user && (
+            <Identity>
+              <FallbackAvatar user={user} size={32} />
+              <Typography variant="h4" noWrap>
+                {user.name}
+              </Typography>
+              <Typography variant="body2" noWrap>
+                {user.email}
+              </Typography>
+            </Identity>
+          )}
+          <Entries>
+            <LogOutItem
+              onClick={() => {
+                close()
+                onLogOut()
+              }}
+            />
+          </Entries>
+        </Content>
+      )}
     </BarMenu>
   )
 }

@@ -1,11 +1,11 @@
 import { Skeleton, styled, useBreakpoints } from '@linagora/twake-mui'
 import React from 'react'
 
-import { AppsMenu } from './AppsMenu'
+import { AppsMenu, FallbackAppsMenu, type BarFallbackApp } from './AppsMenu'
 import { BarLeft, type BarApp } from './BarLeft'
-import { HelpLink } from './HelpLink'
+import { HelpButton, HelpLink } from './HelpLink'
 import { useSdkStatus } from './SdkProvider'
-import { UserMenu } from './UserMenu'
+import { FallbackUserMenu, UserMenu, type BarFallbackUser } from './UserMenu'
 import { useBarLocales } from './useBarLocales'
 
 export const TWAKE_BAR_HEIGHT = '3rem'
@@ -20,12 +20,23 @@ export interface TwakeBarSlots {
   right?: React.ReactNode
 }
 
+/**
+ * What the bar shows off the platform (no client, or a `public` one): the
+ * platform data replaces it once the client is ready
+ */
+export interface TwakeBarFallback {
+  helpLink?: string
+  apps?: BarFallbackApp[]
+  user?: BarFallbackUser
+}
+
 export interface TwakeBarProps {
   app: BarApp
   /** Called by the log out item: the host owns the logout */
   onLogOut: () => void
   slots?: TwakeBarSlots
   showEmailDomainChip?: boolean
+  fallback?: TwakeBarFallback
 }
 
 const Root = styled('header')(({ theme }) => ({
@@ -63,7 +74,8 @@ export const TwakeBar = ({
   app,
   onLogOut,
   slots = {},
-  showEmailDomainChip
+  showEmailDomainChip,
+  fallback
 }: TwakeBarProps): React.ReactElement => {
   useBarLocales()
   const status = useSdkStatus()
@@ -91,6 +103,15 @@ export const TwakeBar = ({
             onLogOut={onLogOut}
             showEmailDomainChip={showEmailDomainChip}
           />
+        </Right>
+      )}
+      {status === 'public' && fallback && (
+        <Right>
+          {fallback.helpLink && <HelpButton href={fallback.helpLink} />}
+          {fallback.apps && fallback.apps.length > 0 && (
+            <FallbackAppsMenu apps={fallback.apps} />
+          )}
+          <FallbackUserMenu user={fallback.user} onLogOut={onLogOut} />
         </Right>
       )}
     </Root>

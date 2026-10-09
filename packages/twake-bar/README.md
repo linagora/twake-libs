@@ -40,7 +40,25 @@ const sdk = createSdk({
 </TwakeMuiThemeProvider>
 ```
 
-The bar follows the SDK status: logged out when it is `public`, an avatar skeleton while it is `waiting`, the menus once it is `ready`. Locale and theme come from the host's `I18n` and `TwakeMuiThemeProvider`.
+The bar follows the SDK status: an avatar skeleton while it is `waiting`, the menus of the platform once it is `ready`, and off the platform when it is `public`. Locale and theme come from the host's `I18n` and `TwakeMuiThemeProvider`.
+
+### Off the platform
+
+Without a `SdkProvider`, or with a `public` client (no workplace, token exchange refused), the bar has no home button. The host can give what to show instead:
+
+```tsx
+<TwakeBar
+  app={app}
+  onLogOut={logOut}
+  fallback={{
+    helpLink: 'https://twake.app/support/',
+    apps: [{ name: 'Mail', href: 'https://mail.example/', icon: '/mail.svg' }],
+    user: { name: userinfo.name, email: userinfo.email }
+  }}
+/>
+```
+
+Each part is optional. With a `fallback`, the account menu always shows, with the log out. The platform data replaces the fallbacks once the client is `ready`.
 
 ### Props
 
@@ -48,6 +66,7 @@ The bar follows the SDK status: logged out when it is `public`, an avatar skelet
 - `onLogOut`: called by the log out item, the host ends its SSO session
 - `slots`: `left` replaces the home button and title, `center`, `search` fills the middle, `right` is rendered before the menus
 - `showEmailDomainChip`: warns when the organization has no mail app yet (default `true`)
+- `fallback`: `helpLink`, `apps` and `user` shown off the platform
 
 ### Hooks
 

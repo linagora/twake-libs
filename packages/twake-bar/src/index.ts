@@ -1,10 +1,13 @@
 export {
   TwakeBar,
   TWAKE_BAR_HEIGHT,
+  type TwakeBarFallback,
   type TwakeBarProps,
   type TwakeBarSlots
 } from './TwakeBar'
 export type { BarApp } from './BarLeft'
+export type { BarFallbackApp } from './AppsMenu'
+export type { BarFallbackUser } from './UserMenu'
 export {
   SdkProvider,
   useSdk,
