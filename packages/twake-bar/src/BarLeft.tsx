@@ -5,7 +5,7 @@ import React, { useState } from 'react'
 
 import { useI18n } from 'twake-i18n'
 
-import { useSdk } from './SdkProvider'
+import { useSdk, useSdkStatus } from './SdkProvider'
 import { useBarLocales } from './useBarLocales'
 import { useSdkData } from './useSdkData'
 
@@ -104,13 +104,21 @@ const HomeButton = (): React.ReactElement => {
 export const BarLeft = ({ app }: { app: BarApp }): React.ReactElement => {
   useBarLocales()
   const { isMobile } = useBreakpoints()
+  // Off the platform, no home to go back to
+  const hasHome = useSdkStatus() !== 'public'
 
-  if (isMobile) return <HomeButton />
+  if (isMobile) {
+    return hasHome ? <HomeButton /> : <AppIcon src={app.icon} alt={app.name} />
+  }
 
   return (
     <Left>
-      <HomeButton />
-      <Divider orientation="vertical" flexItem />
+      {hasHome && (
+        <>
+          <HomeButton />
+          <Divider orientation="vertical" flexItem />
+        </>
+      )}
       <AppIcon src={app.icon} alt={app.textIcon ? '' : app.name} />
       <Wordmark aria-hidden="true" />
       {app.textIcon && <AppTextIcon src={app.textIcon} alt={app.name} />}

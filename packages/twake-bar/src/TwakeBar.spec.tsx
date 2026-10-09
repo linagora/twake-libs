@@ -25,16 +25,17 @@ describe('TwakeBar', () => {
     expect(screen.queryByTestId('twake-bar-apps-button')).toBe(null)
   })
 
-  it('shows logged out on a public page', () => {
+  it('shows logged out, without the home, on a public page', () => {
     renderBar(makeSdk({ status: 'public' }))
 
     expect(screen.queryByTestId('twake-bar-avatar-skeleton')).toBe(null)
     expect(screen.queryByTestId('twake-bar-user-button')).toBe(null)
-    expect(screen.queryByTestId('twake-bar-home')).toBeInTheDocument()
+    expect(screen.queryByTestId('twake-bar-home')).toBe(null)
+    expect(screen.queryByRole('img', { name: 'Calendar' })).toBeInTheDocument()
   })
 
   it('shows the home logo, not a link, until the platform gives its URL', () => {
-    renderBar(makeSdk({ status: 'public' }))
+    renderBar(makeSdk({ status: 'waiting' }))
 
     const home = screen.getByTestId('twake-bar-home')
     expect(home.tagName).toBe('SPAN')
@@ -85,4 +86,5 @@ describe('TwakeBar', () => {
 
     expect(onLogOut).toHaveBeenCalledTimes(1)
   })
+
 })
