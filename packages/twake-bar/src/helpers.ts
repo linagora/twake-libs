@@ -21,6 +21,30 @@ export function sortApps(apps: App[], slugsOrder: string[]): App[] {
   return [...apps].sort((a, b) => rank(a) - rank(b))
 }
 
+/**
+ * Value of a flag, read into nested objects like cozy-flags does: the stack
+ * may serve `drive.office.enabled` as `{ 'drive.office': { enabled: true } }`
+ */
+export function getFlag(flags: Flags, name: string): unknown {
+  if (name in flags) return flags[name]
+  const parts = name.split('.')
+  for (let index = parts.length - 1; index > 0; index--) {
+    const prefix = parts.slice(0, index).join('.')
+    if (prefix in flags) {
+      return parts
+        .slice(index)
+        .reduce<unknown>(
+          (value, key) =>
+            value !== null && typeof value === 'object' && key in value
+              ? (value as Record<string, unknown>)[key]
+              : null,
+          flags[prefix]
+        )
+    }
+  }
+  return null
+}
+
 /** Entrypoints of the apps whose flag conditions hold */
 export function getEntrypoints(apps: App[], flags: Flags): AppEntrypoint[] {
   return apps.flatMap(app =>
@@ -29,7 +53,7 @@ export function getEntrypoints(apps: App[], flags: Flags): AppEntrypoint[] {
         (entrypoint.conditions ?? []).every(
           condition =>
             condition.type === 'flag' &&
-            flags[condition.name] === condition.value
+            getFlag(flags, condition.name) === condition.value
         )
       )
       .map(entrypoint => ({ ...entrypoint, slug: app.slug }))
