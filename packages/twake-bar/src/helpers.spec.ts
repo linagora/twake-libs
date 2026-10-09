@@ -67,6 +67,34 @@ describe('getEntrypoints', () => {
       )
     ).toEqual(['contacts/groups', 'contacts/beta'])
   })
+
+  it('reads the flags nested in an object', () => {
+    const apps = [
+      makeApp({
+        slug: 'drive',
+        entrypoints: [
+          {
+            name: 'new-text',
+            title: { en: 'Text' },
+            hash: '/onlyoffice/create',
+            conditions: [
+              { type: 'flag', name: 'drive.office.enabled', value: true },
+              { type: 'flag', name: 'drive.office.write', value: true }
+            ]
+          }
+        ]
+      })
+    ]
+
+    expect(
+      getEntrypoints(apps, {
+        'drive.office': { enabled: true, write: true }
+      }).map(entrypoint => entrypoint.name)
+    ).toEqual(['new-text'])
+    expect(getEntrypoints(apps, { 'drive.office': { enabled: true } })).toEqual(
+      []
+    )
+  })
 })
 
 describe('formatAvailableGigabytes', () => {
