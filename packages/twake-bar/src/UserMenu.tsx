@@ -90,12 +90,11 @@ const Entries = styled(MenuList)(({ theme }) => ({
     borderRadius: 0,
     fontSize: 16
   },
+  // The 16px icon gutter is the gap of the twake-mui MenuItem
   '& .MuiMenuItem-root .MuiListItemIcon-root': {
     minWidth: 32,
-    marginRight: 16,
     color: theme.vars.palette.text.secondary
   },
-  '& .MuiMenuItem-root .MuiListItemIcon-root:last-child': { marginRight: 0 },
   '& .MuiMenuItem-root.withEndIcon': { paddingRight: 8 },
   '& .MuiDivider-root.MuiDivider-inset': { margin: '0 0 0 64px' }
 }))
