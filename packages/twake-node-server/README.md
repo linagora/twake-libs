@@ -17,27 +17,27 @@ npm install @linagora/twake-node-server
 ## Usage
 
 ```ts
-import { fileURLToPath } from "node:url";
-import { pino } from "pino";
-import { createServer, handleSignals } from "@linagora/twake-node-server";
-import { createDb, migrateDb } from "@linagora/twake-node-server/postgres";
+import { fileURLToPath } from 'node:url'
+import { pino } from 'pino'
+import { createServer, handleSignals } from '@linagora/twake-node-server'
+import { createDb, migrateDb } from '@linagora/twake-node-server/postgres'
 
-const log = pino();
-const lifecycle = handleSignals({ log, deadlineMs: 25_000 });
+const log = pino()
+const lifecycle = handleSignals({ log, deadlineMs: 25_000 })
 
-const { sql, db } = createDb(process.env.DATABASE_URL, { log });
-await migrateDb(sql, fileURLToPath(new URL("../drizzle", import.meta.url)));
+const { sql, db } = createDb(process.env.DATABASE_URL, { log })
+await migrateDb(sql, fileURLToPath(new URL('../drizzle', import.meta.url)))
 
 const app = createServer({
   logger: log,
   isReady: async () => (await sql`select 1`).length === 1,
-});
-await app.listen({ host: "0.0.0.0", port: 8080 });
+})
+await app.listen({ host: '0.0.0.0', port: 8080 })
 
 lifecycle.started(async () => {
-  await app.close();
-  await sql.end();
-});
+  await app.close()
+  await sql.end()
+})
 ```
 
 ## Server
