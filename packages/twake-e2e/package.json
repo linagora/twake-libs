@@ -1,0 +1,65 @@
+{
+  "name": "@linagora/twake-e2e",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "A fake SSO and sign-in helpers for the end-to-end suites of Twake apps",
+  "author": "Twake",
+  "license": "MIT",
+  "engines": {
+    "node": "24.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linagora/twake-libs.git",
+    "directory": "packages/twake-e2e"
+  },
+  "bin": {
+    "twake-fake-sso": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./playwright": {
+      "types": "./dist/playwright.d.ts",
+      "import": "./dist/playwright.js"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "tsc -p tsconfig.build.json --watch",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@playwright/test": "^1.50.0"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^24.19.2",
+    "cozy-tsconfig": "^2.0.0",
+    "eslint": "10.2.1",
+    "eslint-config-cozy-app": "7.0.0",
+    "jose": "^6.2.12",
+    "openid-client": "^6.8.8",
+    "vitest": "5.0.1"
+  }
+}
