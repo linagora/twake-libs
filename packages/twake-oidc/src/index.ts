@@ -18,3 +18,10 @@ export {
   type TokenSet
 } from './session'
 export { addAuthorization, redirectOnUnauthorized } from './http'
+export {
+  relayCallback,
+  signInSilently,
+  signInWithPopup,
+  type SignInResult
+} from './frame'
+export { resumeSession } from './resume'
