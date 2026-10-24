@@ -1,11 +1,13 @@
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 
+import { createRemoteJWKSet, jwtVerify } from 'jose'
 import * as client from 'openid-client'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { startFakeSso, type FakeSso, type FakeSsoOptions } from './sso.js'
 
+const BACKEND = { clientId: 'app-backend', clientSecret: 'secret' }
 const AUDIENCE = 'app'
 const REDIRECT_URI = 'https://app.e2e.test/callback'
 
@@ -25,21 +27,28 @@ async function freePort(): Promise<number> {
 async function start(options: Partial<FakeSsoOptions> = {}): Promise<{
   sso: FakeSso
   frontend: client.Configuration
+  backend: client.Configuration
 }> {
   const sso = await startFakeSso({
     issuer: `http://127.0.0.1:${await freePort()}`,
+    backend: BACKEND,
     audience: AUDIENCE,
     ...options
   })
   closing.push(sso.close)
+  const discover = (
+    clientId: string,
+    auth?: client.ClientAuth
+  ): Promise<client.Configuration> =>
+    client.discovery(new URL(sso.url), clientId, undefined, auth, {
+      execute: [client.allowInsecureRequests]
+    })
   return {
     sso,
-    frontend: await client.discovery(
-      new URL(sso.url),
-      AUDIENCE,
-      undefined,
-      client.None(),
-      { execute: [client.allowInsecureRequests] }
+    frontend: await discover(AUDIENCE, client.None()),
+    backend: await discover(
+      BACKEND.clientId,
+      client.ClientSecretBasic(BACKEND.clientSecret)
     )
   }
 }
@@ -107,8 +116,8 @@ async function signIn(
 }
 
 describe('sign-in', () => {
-  it('signs a person in and tells the app who they are', async () => {
-    const { sso, frontend } = await start()
+  it('signs a person in and tells the backend who they are', async () => {
+    const { sso, frontend, backend } = await start()
 
     const { accessToken } = await signIn(sso, frontend, 'alice')
 
@@ -122,6 +131,9 @@ describe('sign-in', () => {
       org_id: 'acme.e2e.test',
       org_role: 'admin'
     })
+    await expect(
+      client.tokenIntrospection(backend, accessToken)
+    ).resolves.toMatchObject({ active: true, aud: AUDIENCE })
   })
 
   it('offers a button per person', async () => {
@@ -169,6 +181,22 @@ describe('sign-in', () => {
       })
     ).rejects.toThrow()
   })
+
+  it('refuses introspection to another client', async () => {
+    const { sso, frontend } = await start()
+    const { accessToken } = await signIn(sso, frontend, 'alice')
+    const intruder = await client.discovery(
+      new URL(sso.url),
+      BACKEND.clientId,
+      undefined,
+      client.ClientSecretBasic('wrong'),
+      { execute: [client.allowInsecureRequests] }
+    )
+
+    await expect(
+      client.tokenIntrospection(intruder, accessToken)
+    ).rejects.toThrow()
+  })
 })
 
 describe('silent sign-in', () => {
@@ -203,5 +231,47 @@ describe('silent sign-in', () => {
     expect(response.headers.get('content-security-policy')).toBe(
       'frame-ancestors https://space.e2e.test'
     )
+  })
+})
+
+describe('logout', () => {
+  it('ends the session and tells the backend', async () => {
+    const logoutTokens: string[] = []
+    const receiver = createServer((req, res) => {
+      let body = ''
+      req.on('data', (chunk: Buffer) => (body += chunk.toString()))
+      req.on('end', () => {
+        logoutTokens.push(new URLSearchParams(body).get('logout_token') ?? '')
+        res.end()
+      })
+    })
+    await new Promise<void>(resolve => receiver.listen(0, resolve))
+    closing.push(
+      () => new Promise<void>(resolve => receiver.close(() => resolve()))
+    )
+    const { port } = receiver.address() as AddressInfo
+    const { sso, frontend, backend } = await start({
+      backchannelLogoutUri: `http://127.0.0.1:${port}/logout`
+    })
+    const { accessToken, cookie, sid } = await signIn(sso, frontend, 'alice')
+
+    const response = await fetch(
+      `${sso.url}/logout?post_logout_redirect_uri=${encodeURIComponent('https://app.e2e.test/')}`,
+      { headers: { cookie }, redirect: 'manual' }
+    )
+
+    expect(response.headers.get('location')).toBe('https://app.e2e.test/')
+    const { payload } = await jwtVerify(
+      logoutTokens[0] ?? '',
+      createRemoteJWKSet(new URL(`${sso.url}/jwks`)),
+      { issuer: sso.url, audience: AUDIENCE }
+    )
+    expect(payload).toMatchObject({
+      sid,
+      events: { 'http://schemas.openid.net/event/backchannel-logout': {} }
+    })
+    await expect(
+      client.tokenIntrospection(backend, accessToken)
+    ).resolves.toMatchObject({ active: false })
   })
 })

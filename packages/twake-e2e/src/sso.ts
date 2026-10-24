@@ -42,13 +42,17 @@ export interface FakeSsoOptions {
   port?: number
   // Without it, the SSO is served over plain HTTP.
   tls?: { key: string | Buffer; cert: string | Buffer }
-  // The `aud` of the access tokens.
+  // The client that introspects tokens.
+  backend: { clientId: string; clientSecret: string }
+  // The `aud` of the access tokens and of the logout tokens.
   audience: string
   people?: Record<string, Person>
   // null signs everyone in as a B2C user, with no org_id.
   organization?: string | null
   // Who may show the SSO's pages in a frame.
   frameAncestors?: string
+  // Where the backend listens for back-channel logout tokens.
+  backchannelLogoutUri?: string
 }
 
 export interface FakeSso {
@@ -68,6 +72,9 @@ interface Grant {
 type Token = Grant & { exp: number }
 
 const TOKEN_TTL_S = 3600
+const BACKCHANNEL_LOGOUT_EVENT =
+  'http://schemas.openid.net/event/backchannel-logout'
+
 const b64url = (data: Buffer | string): string =>
   Buffer.from(data).toString('base64url')
 
@@ -87,6 +94,31 @@ async function readForm(req: IncomingMessage): Promise<URLSearchParams> {
   let body = ''
   for await (const chunk of req) body += String(chunk)
   return new URLSearchParams(body)
+}
+
+// Decoded as RFC 6749 2.3.1 says, and as LemonLDAP does from 2.23. Raw
+// credentials, which older versions need, decode to themselves.
+function basicAuth(header: string | undefined): {
+  id?: string
+  secret?: string
+} {
+  const raw = Buffer.from(
+    (header ?? '').replace(/^Basic /, ''),
+    'base64'
+  ).toString()
+  const colon = raw.indexOf(':')
+  if (colon === -1) return {}
+  const decode = (part: string): string | undefined => {
+    try {
+      return decodeURIComponent(part.replace(/\+/g, ' '))
+    } catch {
+      return undefined
+    }
+  }
+  return {
+    id: decode(raw.slice(0, colon)),
+    secret: decode(raw.slice(colon + 1))
+  }
 }
 
 const warn = (...parts: unknown[]): void => {
@@ -141,6 +173,36 @@ export async function startFakeSso(options: FakeSsoOptions): Promise<FakeSso> {
         org_id: organization,
         org_role: person.orgRole ?? 'member'
       })
+    }
+  }
+
+  // LemonLDAP tells the backend a session ended, so the backend refuses its
+  // tokens at once rather than when its identity cache expires.
+  const backchannelLogout = async (
+    uri: string,
+    sid: string,
+    username: string
+  ): Promise<void> => {
+    const response = await fetch(uri, {
+      signal: AbortSignal.timeout(5000),
+      method: 'POST',
+      body: new URLSearchParams({
+        logout_token: jwt({
+          iss: issuer,
+          aud: options.audience,
+          sub: emailOf(username),
+          sid,
+          iat: Math.floor(Date.now() / 1000),
+          jti: randomUUID(),
+          events: { [BACKCHANNEL_LOGOUT_EVENT]: {} }
+        })
+      })
+    }).catch((error: unknown) => {
+      warn('back-channel logout failed', error)
+      return undefined
+    })
+    if (response && !response.ok) {
+      warn('back-channel logout answered', response.status)
     }
   }
 
@@ -232,6 +294,8 @@ export async function startFakeSso(options: FakeSsoOptions): Promise<FakeSso> {
           authorization_endpoint: `${issuer}/authorize`,
           token_endpoint: `${issuer}/token`,
           userinfo_endpoint: `${issuer}/userinfo`,
+          introspection_endpoint: `${issuer}/introspect`,
+          end_session_endpoint: `${issuer}/logout`,
           jwks_uri: `${issuer}/jwks`,
           response_types_supported: ['code'],
           subject_types_supported: ['public'],
@@ -324,6 +388,58 @@ export async function startFakeSso(options: FakeSsoOptions): Promise<FakeSso> {
           return
         }
         json(res, 200, userinfo(token))
+        return
+      }
+
+      case '/introspect': {
+        const client = basicAuth(req.headers.authorization)
+        if (
+          client.id !== options.backend.clientId ||
+          client.secret !== options.backend.clientSecret
+        ) {
+          json(res, 401, { error: 'invalid_client' })
+          return
+        }
+        const form = await readForm(req)
+        const token = accessTokens.get(form.get('token') ?? '')
+        if (!isLive(token)) {
+          json(res, 200, { active: false })
+          return
+        }
+        json(res, 200, {
+          active: true,
+          sub: emailOf(token.username),
+          aud: options.audience,
+          client_id: token.clientId,
+          exp: token.exp
+        })
+        return
+      }
+
+      case '/logout': {
+        const session = cookieSession(req.headers.cookie)
+        if (session) {
+          sessions.delete(session.sid)
+          if (options.backchannelLogoutUri) {
+            await backchannelLogout(
+              options.backchannelLogoutUri,
+              session.sid,
+              session.username
+            )
+          }
+        }
+        const clearCookie = `e2e_sid=; ${cookieAttributes}; Max-Age=0`
+        const back = url.searchParams.get('post_logout_redirect_uri')
+        if (back) {
+          res.writeHead(302, {
+            location: new URL(back).href,
+            'set-cookie': clearCookie
+          })
+          res.end()
+          return
+        }
+        res.writeHead(200, { 'set-cookie': clearCookie })
+        res.end('Signed out')
         return
       }
 
