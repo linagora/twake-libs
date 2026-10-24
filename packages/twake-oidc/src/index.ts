@@ -17,7 +17,7 @@ export {
   onSessionEndedElsewhere,
   type TokenSet
 } from './session'
-export { addAuthorization, redirectOnUnauthorized } from './http'
+export { addAuthorization, fetchSignedIn, redirectOnUnauthorized } from './http'
 export {
   relayCallback,
   signInSilently,
@@ -25,3 +25,4 @@ export {
   type SignInResult
 } from './frame'
 export { resumeSession } from './resume'
+export { readAuthConfig, type SsoSettings } from './settings'
