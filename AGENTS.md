@@ -13,7 +13,10 @@ npm run build
 npm run lint
 
 # Lint specific package
-npm run lint --workspace=@linagora/twake-utils
+npx rs lint packages/twake-utils/src
+
+# Format all files
+npm run fmt
 
 # Test dry-run release (safe, no publish)
 npm run release:dry

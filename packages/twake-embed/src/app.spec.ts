@@ -473,6 +473,7 @@ describe('connectToTwakeSpace', () => {
     space = connectToTwakeSpace({
       embedPrefix: PREFIX,
       parent,
+      // eslint-disable-next-line jest/no-disabled-tests -- a regex .test() call, not a test
       isResourceId: id => /^p\d+$/.test(id)
     })
     if (!space) throw new Error('not connected')

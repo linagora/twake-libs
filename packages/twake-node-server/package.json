@@ -37,8 +37,6 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "tsc -p tsconfig.build.json --watch",
     "test": "vitest run",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
@@ -59,8 +57,6 @@
     "@types/node": "^24.19.2",
     "cozy-tsconfig": "^2.0.0",
     "drizzle-orm": "1.0.0-rc.4",
-    "eslint": "10.2.1",
-    "eslint-config-cozy-app": "7.0.0",
     "fastify": "^5.12.5",
     "pino": "^10.4.0",
     "postgres": "^3.4.9",

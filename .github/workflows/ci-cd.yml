@@ -50,6 +50,8 @@ jobs:
         run: npm run build
       - name: Lint
         run: npm run lint
+      - name: Check formatting
+        run: npm run lint:fmt
       - name: Test
         run: npm test
       - name: Configure git

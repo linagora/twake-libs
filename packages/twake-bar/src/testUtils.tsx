@@ -97,6 +97,7 @@ export const renderWithSdk = (
 
 /** Makes MUI breakpoints see a phone: `down(...)` media queries match */
 export const useMobileViewport = (): void => {
+  // eslint-disable-next-line @typescript-eslint/unbound-method -- restored as is after each test
   const desktop = window.matchMedia
   beforeEach(() => {
     window.matchMedia = (query: string): MediaQueryList => ({

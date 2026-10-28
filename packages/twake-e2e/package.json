@@ -40,8 +40,6 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "tsc -p tsconfig.build.json --watch",
     "test": "vitest run",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
@@ -56,8 +54,6 @@
     "@playwright/test": "^1.64.1",
     "@types/node": "^24.19.2",
     "cozy-tsconfig": "^2.0.0",
-    "eslint": "10.2.1",
-    "eslint-config-cozy-app": "7.0.0",
     "jose": "^6.2.12",
     "openid-client": "^6.8.8",
     "vitest": "5.0.1"
