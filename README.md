@@ -104,11 +104,7 @@ Create your package in `packages/<name>/` with the required `package.json` field
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "dist",
-    "CHANGELOG.md",
-    "README.md"
-  ]
+  "files": ["dist", "CHANGELOG.md", "README.md"]
 }
 ```
 

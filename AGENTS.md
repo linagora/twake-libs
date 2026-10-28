@@ -71,6 +71,7 @@ For each changed package:
 ## Commits
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) for automatic versioning:
+
 - `feat:` → minor version bump
 - `fix:` → patch version bump
 - `feat!:` or `BREAKING CHANGE:` → major version bump

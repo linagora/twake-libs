@@ -195,10 +195,7 @@ export type AppMessage =
 
 /** From TwakeSpace to the app */
 export type HostMessage =
-  | HelloMessage
-  | LoadMessage
-  | NavigateMessage
-  | UploadMessage
+  HelloMessage | LoadMessage | NavigateMessage | UploadMessage
 
 export interface OverlayBox {
   x: number

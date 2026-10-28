@@ -93,7 +93,11 @@ Two ways to grow, not to be confused:
   `allow="fullscreen"` on the frame:
 
   ```ts
-  import { canGoFullscreen, requestFullscreen, exitFullscreen } from '@linagora/twake-embed'
+  import {
+    canGoFullscreen,
+    requestFullscreen,
+    exitFullscreen
+  } from '@linagora/twake-embed'
 
   if (canGoFullscreen()) await requestFullscreen(player)
   ```
@@ -188,7 +192,13 @@ Links leaving the frame open in a new tab, and the frame stays on the app:
 ## In TwakeSpace
 
 ```ts
-import { helloMessage, parseAppMessage, loadMessage, navigateMessage, embedUrl } from '@linagora/twake-embed'
+import {
+  helloMessage,
+  parseAppMessage,
+  loadMessage,
+  navigateMessage,
+  embedUrl
+} from '@linagora/twake-embed'
 ```
 
 TwakeSpace posts `helloMessage()` to a frame on each of its `load` events
