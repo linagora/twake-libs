@@ -1,7 +1,8 @@
-import { Dialog } from '@linagora/twake-mui'
 import { act, fireEvent, screen } from '@testing-library/react'
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { Dialog } from '@linagora/twake-mui'
 
 import { FeedbackButton, type FeedbackButtonProps } from './FeedbackButton'
 import { renderWithProviders } from './testUtils'

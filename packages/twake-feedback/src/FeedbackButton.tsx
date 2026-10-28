@@ -1,7 +1,7 @@
-import { Comment, Icon } from '@linagora/twake-icons'
-import { Fab, Menu, MenuItem, Tooltip, styled } from '@linagora/twake-mui'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
+import { Comment, Icon } from '@linagora/twake-icons'
+import { Fab, Menu, MenuItem, Tooltip, styled } from '@linagora/twake-mui'
 import { useI18n } from 'twake-i18n'
 
 import { getFeedbackButtonStrings, getFeedbackLabels } from './locales'
