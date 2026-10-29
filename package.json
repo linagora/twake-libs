@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "npm run test --workspaces",
+    "test": "vitest run",
     "lint": "rs lint packages/*/src",
     "lint:fix": "rs lint --fix packages/*/src && rs fmt",
     "lint:fmt": "rs fmt --check",
