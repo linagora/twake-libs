@@ -55,3 +55,5 @@ Tokens stay in memory: a reload exchanges the id token again.
 ## Platform requirements
 
 `token_exchange` succeeds when the host requests the `workplaceFqdn` scope, the stack context lists the host's SSO client in `oidc.app_token_exchange`, and the host's container app is installed from the registry.
+
+The first login of a page reads the container app, so the platform updates it from the registry like it does when it serves an app. An update that changes the permissions only goes through when the context lists the container app in `additional_platform_apps`.

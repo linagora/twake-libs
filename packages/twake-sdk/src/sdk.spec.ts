@@ -107,6 +107,30 @@ describe('status', () => {
   })
 })
 
+describe('app update', () => {
+  it('reads the container app once per page, so the platform updates it', async () => {
+    const { sdk, fetchMock } = await loggedIn()
+
+    await sdk.login('renewed')
+
+    const requests = requestsTo(fetchMock, '/apps/calendar')
+    expect(requests).toHaveLength(1)
+    expect(authorizationOf(requests[0])).toBe('Bearer access-1')
+  })
+
+  it('reads no app when the token is not linked to one', async () => {
+    const fetchMock = stubFetch({
+      '/auth/token_exchange': () =>
+        json({ ...CREDENTIALS, scope: 'io.cozy.files' })
+    })
+    const sdk = createSdk({ platformURL: PLATFORM_URL })
+
+    await sdk.login('id-token')
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('fetch', () => {
   it('sends the bearer token to the platform', async () => {
     const { sdk, fetchMock } = await loggedIn({ '/apps/': () => json(APPS) })

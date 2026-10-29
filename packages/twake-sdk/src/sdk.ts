@@ -112,6 +112,7 @@ export function createSdk(options: SdkOptions): Sdk {
   let status: SdkStatus = 'waiting'
   let waitingTimer: ReturnType<typeof setTimeout> | null = null
   let refreshing: Promise<Credentials> | null = null
+  let appUpdateRequested = false
   const listeners = new Set<(status: SdkStatus) => void>()
   // Platform data for the page lifetime, keyed by request path
   const cache = new Map<string, Promise<unknown>>()
@@ -137,6 +138,12 @@ export function createSdk(options: SdkOptions): Sdk {
       throw err
     }
     setStatus('ready')
+    // The stack lazy-updates an app when it serves its index, never for a
+    // standalone client: reading the app manifest does it, once per page
+    if (credentials.appSlug && !appUpdateRequested) {
+      appUpdateRequested = true
+      sdkFetch(`/apps/${credentials.appSlug}`).catch(() => null)
+    }
   }
 
   const logout = (): void => {
