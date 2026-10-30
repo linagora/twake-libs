@@ -216,7 +216,8 @@ describe('FeedbackButton', () => {
       })
 
       expect(getButton()).toHaveStyle({ bottom: '328px' })
-      expect(getInsetStyle()).toContain('auto 16px 328px auto')
+      // At the top now: the form opens downward from the top of the button
+      expect(getInsetStyle()).toContain('16px 16px auto auto')
     })
   })
 

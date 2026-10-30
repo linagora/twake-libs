@@ -89,8 +89,23 @@ export const snapToEdge = (
   )
 })
 
-/** Where the Sentry form opens, as the value of its `--inset` variable */
-export const getFormInset = ({ side, bottom }: FeedbackPosition): string =>
-  side === 'left'
-    ? `auto auto ${bottom}px ${EDGE_MARGIN}px`
-    : `auto ${EDGE_MARGIN}px ${bottom}px auto`
+/**
+ * Where the Sentry form opens, as the value of its `--inset` variable: from
+ * the bottom of a button in the lower half of the viewport, upward, and from
+ * the top of a button in the upper half, downward, so that it opens on the
+ * side with the most room. Sideways it keeps to the edge of the button.
+ */
+// The form is not measured: one taller than the larger half still overflows
+export const getFormInset = (
+  { side, bottom }: FeedbackPosition,
+  viewportHeight: number
+): string => {
+  const [right, left] =
+    side === 'left'
+      ? ['auto', `${EDGE_MARGIN}px`]
+      : [`${EDGE_MARGIN}px`, 'auto']
+  const top = viewportHeight - bottom - FAB_SIZE
+  return top < bottom
+    ? `${top}px ${right} auto ${left}`
+    : `auto ${right} ${bottom}px ${left}`
+}
