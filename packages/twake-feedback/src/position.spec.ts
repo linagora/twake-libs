@@ -21,10 +21,23 @@ describe('getFormInset', () => {
     )
   })
 
-  it('opens the form downward from a button moved to the top', () => {
-    // The button spans 16 to 72 px from the top: the form starts at its top
+  it('keeps the form at the height of a button with room above it', () => {
+    expect(getFormInset({ side: 'left', bottom: 200 }, 800)).toBe(
+      'auto auto 200px 16px'
+    )
+  })
+
+  it('slides the form down from a button moved to the top', () => {
+    // 800 - 16 - 520: the form starts 16 px from the top
     expect(getFormInset({ side: 'left', bottom: 728 }, 800)).toBe(
-      '16px auto auto 16px'
+      'auto auto 264px 16px'
+    )
+  })
+
+  it('keeps the form above the bottom edge on a short viewport', () => {
+    // Just above the middle: never anchored by its top, so its buttons stay
+    expect(getFormInset({ side: 'right', bottom: 300 }, 500)).toBe(
+      'auto 16px 16px auto'
     )
   })
 })
