@@ -1,3 +1,10 @@
+# @linagora/twake-node-telemetry [1.2.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-node-telemetry@1.1.0...@linagora/twake-node-telemetry@1.2.0) (2026-10-30)
+
+
+### Features
+
+* **twake-node-telemetry:** Redact twakeactor, the mail of the user in activity events ([8459f56](https://github.com/linagora/twake-libs/commit/8459f56c4d9be16e379694eee0fd0f1c11e98874))
+
 # @linagora/twake-node-telemetry [1.1.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-node-telemetry@1.0.0...@linagora/twake-node-telemetry@1.1.0) (2026-10-26)
 
 
