@@ -101,7 +101,7 @@ export const FeedbackButton = ({
     bottom: clampBottom(stored.bottom, viewportHeight, bottomOffset)
   }
 
-  useFormInset(position, styleNonce)
+  useFormInset(position, viewportHeight, styleNonce)
 
   const onSideChangeRef = useRef(onSideChange)
   useEffect(() => {
