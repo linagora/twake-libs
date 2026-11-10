@@ -1,7 +1,9 @@
 import { resolveUriTemplate, UriTemplateContext } from './uriTemplateUtils'
 
 // A Matrix localpart with an optional "@", or a full "@user:server[:port]" ID.
-const CHAT_TARGET = /^(@?[a-z0-9._=+-]+|@[a-z0-9._=+-]+:[a-z0-9.-]+(:\d+)?)$/i
+// A dot-only localpart is refused: "." and ".." are path dot segments.
+const CHAT_TARGET =
+  /^(?!@?\.+$)(@?[a-z0-9._=+-]+|@[a-z0-9._=+-]+:[a-z0-9.-]+(:\d+)?)$/i
 
 // "@{target}" followed by an optional ":server" part (literal or expression)
 const TEMPLATE_MATRIX_ID = /@\{\s*target\s*\}(?::[^/?#&]*)?/g

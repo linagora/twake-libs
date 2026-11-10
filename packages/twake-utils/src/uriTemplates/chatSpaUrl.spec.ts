@@ -75,6 +75,9 @@ describe('resolveChatSpaUrl', () => {
     'x&a=b',
     'alice@example.com',
     'neo:matrix.org',
+    '.',
+    '..',
+    '@..',
     ''
   ])('returns null for a target that is not a Matrix ID: %j', target => {
     expect(
