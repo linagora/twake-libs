@@ -50,6 +50,14 @@ const settings = await sdk.getAppURL('settings', '#/profile') // client URL for 
 const intent = await sdk.createIntent({ action: 'PICK', type: 'io.cozy.files' })
 ```
 
+The libraries made for cozy-client take the SDK as their client: `stackClient.fetchJSON(method, path, body)` sends the body as JSON.
+
+```ts
+import Intents from 'cozy-interapp'
+
+const intents = new Intents({ client: sdk })
+```
+
 Tokens stay in memory: a reload exchanges the id token again.
 
 ## Platform requirements

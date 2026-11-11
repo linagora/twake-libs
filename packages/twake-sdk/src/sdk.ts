@@ -21,11 +21,51 @@ const HIDDEN_APPS_FLAG = 'apps.hidden'
 
 export class SdkError extends Error {
   readonly status: number
+  /** The body of the failed response, read by `stackClient.fetchJSON` */
+  readonly reason?: unknown
 
-  constructor(path: string, status: number) {
-    super(`[twake-sdk] ${path} failed: ${status}`)
+  constructor(path: string, status: number, reason?: unknown) {
+    super(
+      (reason === undefined ? '' : reasonMessage(reason)) ||
+        `[twake-sdk] ${path} failed: ${status}`
+    )
     this.name = 'SdkError'
     this.status = status
+    this.reason = reason
+  }
+}
+
+/** Longest message taken from a response, as an HTML error page */
+export const MAX_ERROR_MESSAGE = 1000
+
+// cozy-client's message for a failed response: callers match it (not_found)
+const reasonMessage = (reason: unknown): string => {
+  const message =
+    typeof reason === 'string'
+      ? reason
+      : typeof reason === 'object' &&
+          reason !== null &&
+          'message' in reason &&
+          typeof reason.message === 'string'
+        ? reason.message
+        : JSON.stringify(reason)
+  return message.slice(0, MAX_ERROR_MESSAGE)
+}
+
+// As cozy-client reads a body: JSON when the response says so, text otherwise.
+// A response without a body, as a 204, gives an empty text whatever it says.
+const readBody = async (response: Response): Promise<unknown> => {
+  const text = await response.text()
+  const isJson = /\bapplication\/(vnd\.api\+)?json\b/.test(
+    response.headers.get('Content-Type') ?? ''
+  )
+  if (!isJson || text === '') return text
+  try {
+    return JSON.parse(text) as unknown
+  } catch (err: unknown) {
+    // A failure keeps its status and its text; a success that cannot be read fails
+    if (!response.ok) return text
+    throw err
   }
 }
 
@@ -41,6 +81,18 @@ export interface Sdk {
   /** `window.fetch` on the platform: base URL, bearer, 401 refreshed once */
   fetch(path: string, init?: RequestInit): Promise<Response>
   fetchJSON<T>(path: string, init?: RequestInit): Promise<T>
+  /**
+   * `fetchJSON` as cozy-client's stack client has it, for the libraries made
+   * for cozy-client: `new Intents({ client: sdk })` of cozy-interapp
+   */
+  readonly stackClient: {
+    fetchJSON<T>(
+      method: string,
+      path: string,
+      body?: unknown,
+      options?: RequestInit
+    ): Promise<T>
+  }
   /** Installed apps, without the ones hidden by the `apps.hidden` flag */
   getApps(): Promise<App[]>
   /** Installed apps, hidden ones included */
@@ -210,6 +262,33 @@ export function createSdk(options: SdkOptions): Sdk {
     return (await response.json()) as T
   }
 
+  const stackClient = {
+    fetchJSON: async <T>(
+      method: string,
+      path: string,
+      body?: unknown,
+      options: RequestInit = {}
+    ): Promise<T> => {
+      const headers = new Headers(options.headers)
+      headers.set('Accept', 'application/json')
+      // A body with its own Content-Type goes as it is
+      let payload = body as BodyInit | undefined
+      if (body !== undefined && !headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json')
+        payload = JSON.stringify(body)
+      }
+      const response = await sdkFetch(path, {
+        ...options,
+        method,
+        headers,
+        body: payload
+      })
+      const data = await readBody(response)
+      if (!response.ok) throw new SdkError(path, response.status, data)
+      return data as T
+    }
+  }
+
   const cached = <T>(path: string, load: () => Promise<T>): Promise<T> => {
     let pending = cache.get(path) as Promise<T> | undefined
     if (!pending) {
@@ -367,6 +446,7 @@ export function createSdk(options: SdkOptions): Sdk {
     logout,
     fetch: sdkFetch,
     fetchJSON,
+    stackClient,
     getApps,
     getAllApps,
     getInstance,

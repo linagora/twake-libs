@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createSdk, SdkError, type Sdk } from './sdk'
+import { createSdk, MAX_ERROR_MESSAGE, SdkError, type Sdk } from './sdk'
 import {
   CREDENTIALS,
   PLATFORM_URL,
@@ -343,6 +343,156 @@ describe('platform data', () => {
         attributes: { action: 'PICK', type: 'io.cozy.files' }
       }
     })
+  })
+})
+
+describe('stackClient', () => {
+  it('fetches as cozy-client does, the body as JSON', async () => {
+    const { sdk, fetchMock } = await loggedIn({
+      '/intents': () => json({ data: { id: 'intent-1' } })
+    })
+    const body = { data: { type: 'io.cozy.intents', attributes: {} } }
+
+    await expect(
+      sdk.stackClient.fetchJSON('POST', '/intents', body)
+    ).resolves.toEqual({ data: { id: 'intent-1' } })
+
+    const [init] = requestsTo(fetchMock, '/intents')
+    expect(init?.method).toBe('POST')
+    const headers = new Headers(init?.headers)
+    expect(headers.get('Content-Type')).toBe('application/json')
+    expect(headers.get('Accept')).toBe('application/json')
+    expect(bodyOf(init)).toEqual(body)
+  })
+
+  it('sends no body without one', async () => {
+    const { sdk, fetchMock } = await loggedIn({
+      '/intents/intent-1': () => json({ data: { id: 'intent-1' } })
+    })
+
+    await sdk.stackClient.fetchJSON('GET', '/intents/intent-1')
+
+    const [init] = requestsTo(fetchMock, '/intents/intent-1')
+    expect(init?.method).toBe('GET')
+    expect(init?.body).toBeUndefined()
+  })
+
+  it('passes the request options, a body with its Content-Type as it is', async () => {
+    const { sdk, fetchMock } = await loggedIn({
+      '/data/io.cozy.files/_design/a/copy': () => json({ ok: true })
+    })
+
+    await sdk.stackClient.fetchJSON(
+      'POST',
+      '/data/io.cozy.files/_design/a/copy',
+      'raw',
+      { headers: { Destination: '_design/b', 'Content-Type': 'text/plain' } }
+    )
+
+    const [init] = requestsTo(fetchMock, '/data/io.cozy.files/_design/a/copy')
+    const headers = new Headers(init?.headers)
+    expect(headers.get('Destination')).toBe('_design/b')
+    expect(headers.get('Content-Type')).toBe('text/plain')
+    expect(init?.body).toBe('raw')
+  })
+
+  it('resolves a response without a body', async () => {
+    const { sdk } = await loggedIn({
+      '/files/f1/relationships/referenced_by': () =>
+        new Response(null, { status: 204 })
+    })
+
+    await expect(
+      sdk.stackClient.fetchJSON(
+        'POST',
+        '/files/f1/relationships/referenced_by',
+        {
+          data: []
+        }
+      )
+    ).resolves.toBe('')
+  })
+
+  it('resolves a response without a body that says it is JSON', async () => {
+    const { sdk } = await loggedIn({
+      '/files/f1/relationships/referenced_by': () =>
+        new Response(null, {
+          status: 204,
+          headers: { 'Content-Type': 'application/json' }
+        })
+    })
+
+    await expect(
+      sdk.stackClient.fetchJSON(
+        'POST',
+        '/files/f1/relationships/referenced_by',
+        {
+          data: []
+        }
+      )
+    ).resolves.toBe('')
+  })
+
+  it('keeps the status of a failure whose JSON is invalid', async () => {
+    const { sdk } = await loggedIn({
+      '/intents': () =>
+        new Response('{', {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        })
+    })
+
+    const error: unknown = await sdk.stackClient
+      .fetchJSON('POST', '/intents', {})
+      .catch((err: unknown) => err)
+    expect(error).toBeInstanceOf(SdkError)
+    expect(error).toMatchObject({ status: 503, reason: '{' })
+  })
+
+  it('fails on the invalid JSON of a success', async () => {
+    const { sdk } = await loggedIn({
+      '/intents': () =>
+        new Response('{', { headers: { 'Content-Type': 'application/json' } })
+    })
+
+    await expect(
+      sdk.stackClient.fetchJSON('POST', '/intents', {})
+    ).rejects.toBeInstanceOf(SyntaxError)
+  })
+
+  it('keeps the whole body but a bounded message', async () => {
+    const page = `<html>${'x'.repeat(5000)}</html>`
+    const { sdk } = await loggedIn({
+      '/intents': () =>
+        new Response(page, {
+          status: 502,
+          headers: { 'Content-Type': 'text/html' }
+        })
+    })
+
+    const error: unknown = await sdk.stackClient
+      .fetchJSON('POST', '/intents', {})
+      .catch((err: unknown) => err)
+    expect(error).toMatchObject({ status: 502, reason: page })
+    expect((error as SdkError).message).toHaveLength(MAX_ERROR_MESSAGE)
+  })
+
+  it('rejects with the status and the error of the platform', async () => {
+    const { sdk } = await loggedIn({
+      '/data/io.cozy.files/x': () =>
+        json({ error: 'not_found', reason: 'missing' }, 404)
+    })
+
+    const error: unknown = await sdk.stackClient
+      .fetchJSON('GET', '/data/io.cozy.files/x')
+      .catch((err: unknown) => err)
+    expect(error).toBeInstanceOf(SdkError)
+    expect(error).toMatchObject({
+      status: 404,
+      reason: { error: 'not_found', reason: 'missing' }
+    })
+    // cozy-client's collections recognise a missing document by its message
+    expect((error as SdkError).message).toMatch(/not_found/)
   })
 })
 
