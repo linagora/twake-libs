@@ -30,21 +30,24 @@ the page goes back to an entry recorded before the frame navigated.
 ## In the app
 
 Connect as soon as the app knows it is framed, even on the callback page of
-its silent login, and sync the history once its router exists. The app does
-not need TwakeSpace's address: TwakeSpace greets the frame
-(`twake-embed:hello`) on each of its loads and whenever the app says it is
-listening (`twake-embed:ready`, posted to whoever framed it, since the app
-may boot after the frame's load), and the app answers the origin that
-greeted it. Only a page the app's `frame-ancestors` allows can be that
-parent, so that header stays mandatory, and it is where the address of
-TwakeSpace belongs, in the deployment of the app. `hostOrigins` restricts the
-hosts further when an app wants to.
+its silent login, and sync the history once its router exists. The app lists
+in `hostOrigins` the TwakeSpace that may frame it, from its deployment
+configuration: the same addresses as its `frame-ancestors`, as origins or
+URLs (matched by origin). TwakeSpace greets the frame (`twake-embed:hello`)
+on each of its loads and whenever the app says it is listening
+(`twake-embed:ready`, posted to whoever framed it, since the app may boot
+after the frame's load), and the app answers the host that greeted it when
+it is one of them. `frame-ancestors` stays mandatory: it is what keeps any
+other page from framing the app at all.
 
 ```ts
 import { connectToTwakeSpace, embedRoute } from '@linagora/twake-embed'
 
-const space = connectToTwakeSpace({ embedPrefix: '/embed/projects/' })
-// null when not framed
+const space = connectToTwakeSpace({
+  embedPrefix: '/embed/projects/',
+  hostOrigins: [TWAKE_SPACE_URL]
+})
+// null when not framed, or with no host listed
 
 const stop = space?.syncHistory({
   // Show another resource at `path`, in place; or, until the app can,

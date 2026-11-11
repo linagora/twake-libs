@@ -47,7 +47,7 @@ const hello = { type: 'twake-embed:hello' }
 function connect(
   parent: Window,
   pathname = '/embed/projects/p1',
-  hostOrigins?: string[]
+  hostOrigins: string[] = [HOST]
 ): TwakeSpaceConnection | null {
   window.history.replaceState(null, '', pathname)
   return connectToTwakeSpace({ embedPrefix: PREFIX, parent, hostOrigins })
@@ -60,10 +60,31 @@ describe('connectToTwakeSpace', () => {
     space = null
   })
 
-  it('does nothing out of a frame, or with no host allowed', () => {
+  it('does nothing out of a frame, or with no host listed', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     window.history.replaceState(null, '', '/embed/projects/p1')
-    expect(connectToTwakeSpace({ embedPrefix: PREFIX })).toBeNull()
+    expect(
+      connectToTwakeSpace({ embedPrefix: PREFIX, hostOrigins: [HOST] })
+    ).toBeNull()
+    expect(warn).not.toHaveBeenCalled()
+
+    // Framed with nothing valid to answer: null, and the console says so
     expect(connect(fakeParent(), '/embed/projects/p1', [])).toBeNull()
+    expect(
+      connect(fakeParent(), '/embed/projects/p1', ['not a url'])
+    ).toBeNull()
+    expect(
+      connect(fakeParent(), '/embed/projects/p1', ['data:text/html,x'])
+    ).toBeNull()
+    const parent = fakeParent()
+    expect(
+      // @ts-expect-error the hosts are required: an app without them runs on its own
+      connectToTwakeSpace({ embedPrefix: PREFIX, parent })
+    ).toBeNull()
+    expect(asked(parent)).toBe(0)
+    expect(warn).toHaveBeenCalledTimes(4)
+    expect(warn.mock.calls[0]?.[0]).toMatch(/hostOrigins lists no origin/)
+    warn.mockRestore()
   })
 
   it('asks whoever framed it for the greeting, until it comes', () => {
@@ -87,7 +108,10 @@ describe('connectToTwakeSpace', () => {
 
   it('says nothing until the host greets it, then answers that host', () => {
     const parent = fakeParent()
-    space = connect(parent, '/embed/projects/p1/boards/b1?task=T-1')
+    space = connect(parent, '/embed/projects/p1/boards/b1?task=T-1', [
+      HOST,
+      'https://another-space.test'
+    ])
     if (!space) throw new Error('not connected')
     space.notifyLoginRequired()
     space.reportOverlayRegion('full')
@@ -237,13 +261,14 @@ describe('connectToTwakeSpace', () => {
     ])
   })
 
-  it('keeps to the hosts given, when some are', () => {
+  it('keeps to the hosts listed, matched by origin', () => {
     const parent = fakeParent()
-    space = connect(parent, '/embed/projects/p1', [HOST])
+    space = connect(parent, '/embed/projects/p1', [`${HOST}/some/path`])
     if (!space) throw new Error('not connected')
 
-    fromHost(parent, hello, 'https://evil.test')
+    fromHost(parent, hello, 'https://other.test')
     expect(space.hostOrigin()).toBeNull()
+    expect(posted(parent)).toEqual([])
     fromHost(parent, hello)
     expect(space.hostOrigin()).toBe(HOST)
   })
@@ -260,7 +285,10 @@ describe('connectToTwakeSpace', () => {
 
     beforeEach(() => {
       parent = fakeParent()
-      const connected = connect(parent)
+      const connected = connect(parent, '/embed/projects/p1', [
+        HOST,
+        'https://moved.test'
+      ])
       if (!connected) throw new Error('not connected')
       space = connected
       stop = space.syncHistory(handlers)
@@ -437,6 +465,7 @@ describe('connectToTwakeSpace', () => {
     window.history.replaceState(null, '', '/#/embed/projects/p1')
     space = connectToTwakeSpace({
       embedPrefix: PREFIX,
+      hostOrigins: [HOST],
       parent,
       hashRouting: true
     })
@@ -472,6 +501,7 @@ describe('connectToTwakeSpace', () => {
     window.history.replaceState(null, '', '/embed/projects/p1')
     space = connectToTwakeSpace({
       embedPrefix: PREFIX,
+      hostOrigins: [HOST],
       parent,
       // eslint-disable-next-line jest/no-disabled-tests -- a regex .test() call, not a test
       isResourceId: id => /^p\d+$/.test(id)

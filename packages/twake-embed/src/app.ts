@@ -8,12 +8,11 @@
 // and WebKit: a removed frame keeps its entries as dead Back presses in
 // Chromium and WebKit, and a frame that only replaces adds none.
 //
-// The app does not need to know where TwakeSpace is: TwakeSpace greets the
-// frame (`twake-embed:hello`) on each of its loads and whenever the app says
-// it is listening (`twake-embed:ready`, since the app may boot after the
-// frame's load), and the app answers the origin that greeted it. Only a page the app's `frame-ancestors` allows can
-// be that parent, so the parent is trusted by construction: the header stays
-// mandatory. `hostOrigins` restricts the hosts further, when given.
+// The app lists the hosts that may frame it (`hostOrigins`, the same origins
+// as its `frame-ancestors`): TwakeSpace greets the frame (`twake-embed:hello`)
+// on each of its loads and whenever the app says it is listening
+// (`twake-embed:ready`, since the app may boot after the frame's load), and
+// the app answers the host that greeted it, when it is one of them.
 import { guardLinks } from './links.js'
 import {
   badgesMessage,
@@ -45,11 +44,11 @@ export interface TwakeSpaceOptions {
   /** The embed route without the resource id, '/embed/projects/' */
   embedPrefix: string
   /**
-   * The origins of TwakeSpace the app accepts, when it wants to restrict
-   * them. Without it, the app talks to the page that framed it, once that
-   * page greeted it.
+   * The hosts the app talks to, as origins or URLs (matched by origin): the
+   * TwakeSpace of its deployment, the same as its `frame-ancestors`. With
+   * none, the app runs on its own, as off a frame.
    */
-  hostOrigins?: readonly string[] | undefined
+  hostOrigins: readonly string[]
   /** The shape of a resource id of this app, when it has one */
   isResourceId?: ((resourceId: string) => boolean) | undefined
   /**
@@ -159,14 +158,32 @@ export function connectToTwakeSpace(
 ): TwakeSpaceConnection | null {
   const {
     embedPrefix,
-    hostOrigins,
+    hostOrigins = [],
     isResourceId = (): boolean => true,
     hashRouting = false,
     interceptExternalLinks = true
   } = options
   const parent = options.parent ?? window.parent
   if (parent === window) return null
-  if (hostOrigins !== undefined && hostOrigins.length === 0) return null
+  // Origins only: 'null', the origin of an opaque URL, is what a parent
+  // without an origin has too
+  const hosts = hostOrigins.flatMap(host => {
+    try {
+      const { origin } = new URL(host)
+      return origin === 'null' ? [] : [origin]
+    } catch {
+      return []
+    }
+  })
+  if (hosts.length === 0) {
+    // Framed, with nothing to answer: a deployment variable left out gives
+    // an app on its own in its tab, which the console should say
+    // eslint-disable-next-line no-console -- the one place a missing deployment value shows
+    console.warn(
+      '[twake-embed] framed, but hostOrigins lists no origin: the app runs on its own'
+    )
+    return null
+  }
 
   const locate = (url: {
     pathname: string
@@ -230,7 +247,7 @@ export function connectToTwakeSpace(
   // the first one of a new document of the frame, is answered with the path.
   const onMessage = (event: MessageEvent<unknown>): void => {
     if (event.source !== parent) return
-    if (hostOrigins !== undefined && !hostOrigins.includes(event.origin)) return
+    if (!hosts.includes(event.origin)) return
     const message = parseHostMessage(event.data)
     if (message === null) return
     if (origin !== event.origin) {
