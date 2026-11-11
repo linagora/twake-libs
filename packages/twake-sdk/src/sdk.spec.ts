@@ -173,6 +173,30 @@ describe('fetch', () => {
     expect(sdk.status).toBe('public')
   })
 
+  it.each(['https://elsewhere.example/apps/', '//elsewhere.example/apps/'])(
+    'sends nothing out of the platform: %s',
+    async path => {
+      const { sdk, fetchMock } = await loggedIn({ '/apps/': () => json({}) })
+
+      await expect(sdk.fetch(path)).rejects.toThrow(
+        '[twake-sdk] the request leaves the platform'
+      )
+      expect(
+        fetchMock.mock.calls.filter(
+          ([url]) => url.host !== new URL(PLATFORM_URL).host
+        )
+      ).toEqual([])
+    }
+  )
+
+  it('takes an absolute URL of the platform', async () => {
+    const { sdk, fetchMock } = await loggedIn({ '/apps/': () => json({}) })
+
+    await sdk.fetch(`${PLATFORM_URL}/apps/`)
+
+    expect(requestsTo(fetchMock, '/apps/')).toHaveLength(1)
+  })
+
   it('fetchJSON rejects with the status of a failed request', async () => {
     const { sdk } = await loggedIn({ '/apps/': () => json({}, 500) })
 
