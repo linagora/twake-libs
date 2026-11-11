@@ -1,4 +1,4 @@
-import { exchangeIdToken, refreshCredentials } from './auth'
+import { exchangeIdToken, refreshCredentials, SdkAuthError } from './auth'
 import type {
   App,
   Context,
@@ -14,6 +14,10 @@ import type {
 
 /** Default delay before a client left `waiting` falls back to `public` */
 export const WAITING_TIMEOUT = 30000
+
+/** Delay before a refresh the platform did not answer is tried again */
+export const REFRESH_RETRY_DELAY = 1000
+const REFRESH_ATTEMPTS = 3
 
 const HOME_SHORTCUTS_PATH = '/Settings/Home'
 const STANDALONE_APPS_FLAG = 'apps.enable-standalone-apps'
@@ -209,23 +213,46 @@ export function createSdk(options: SdkOptions): Sdk {
     setStatus('public')
   }
 
+  // The platform refused the refresh token: the credentials are over
+  const refused = (err: unknown): boolean =>
+    err instanceof SdkAuthError && (err.status === 400 || err.status === 401)
+
+  // Any other failure (a network error, a 502) is tried again after a delay,
+  // a few times, while the credentials are still the ones being refreshed
+  const refreshWithRetries = async (
+    current: Credentials
+  ): Promise<Credentials> => {
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        return await refreshCredentials(platformURL, current)
+      } catch (err: unknown) {
+        if (refused(err) || attempt === REFRESH_ATTEMPTS) throw err
+        await new Promise(resolve => setTimeout(resolve, REFRESH_RETRY_DELAY))
+        if (credentials !== current) throw err
+      }
+    }
+  }
+
   const refresh = (): Promise<Credentials> => {
     // Concurrent 401s share one refresh
     if (!refreshing) {
       const current = credentials
       if (!current) return Promise.reject(new SdkError('access_token', 401))
-      refreshing = refreshCredentials(platformURL, current)
+      // A logout, or a new login, during the retries: this refresh is then
+      // about credentials that are over, and leaves the new ones alone
+      const pending: Promise<Credentials> = refreshWithRetries(current)
         .then(next => {
-          credentials = next
+          if (credentials === current) credentials = next
           return next
         })
         .catch((err: unknown) => {
-          logout()
+          if (refused(err) && credentials === current) logout()
           throw err
         })
         .finally(() => {
-          refreshing = null
+          if (refreshing === pending) refreshing = null
         })
+      refreshing = pending
     }
     return refreshing
   }

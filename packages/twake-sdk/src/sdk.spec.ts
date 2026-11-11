@@ -163,7 +163,7 @@ describe('fetch', () => {
     expect(sdk.status).toBe('ready')
   })
 
-  it('logs out when the refresh fails', async () => {
+  it('logs out when the platform refuses the refresh', async () => {
     const { sdk } = await loggedIn({
       '/apps/': () => json({}, 401),
       '/auth/access_token': () => json({}, 400)
@@ -195,6 +195,121 @@ describe('fetch', () => {
     await sdk.fetch(`${PLATFORM_URL}/apps/`)
 
     expect(requestsTo(fetchMock, '/apps/')).toHaveLength(1)
+  })
+
+  it('tries the refresh again after a network failure, and stays ready', async () => {
+    let attempts = 0
+    const { sdk, fetchMock } = await loggedIn({
+      '/apps/': (_url, init) =>
+        authorizationOf(init) === 'Bearer access-2'
+          ? json(APPS)
+          : json({}, 401),
+      '/auth/access_token': () => {
+        attempts += 1
+        if (attempts === 1) throw new TypeError('Failed to fetch')
+        return json({ access_token: 'access-2' })
+      }
+    })
+
+    const pending = sdk.fetch('/apps/')
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect((await pending).status).toBe(200)
+    expect(requestsTo(fetchMock, '/auth/access_token')).toHaveLength(2)
+    expect(sdk.status).toBe('ready')
+  })
+
+  it('logs out when the platform refuses the refresh token with a 401', async () => {
+    const { sdk, fetchMock } = await loggedIn({
+      '/apps/': () => json({}, 401),
+      '/auth/access_token': () => json({ error: 'invalid_grant' }, 401)
+    })
+
+    await expect(sdk.fetch('/apps/')).rejects.toThrow('access_token')
+    expect(requestsTo(fetchMock, '/auth/access_token')).toHaveLength(1)
+    expect(sdk.status).toBe('public')
+  })
+
+  // A second exchange gives other credentials: a new session during a refresh
+  const relogin = (
+    routes: Parameters<typeof stubFetch>[0]
+  ): ReturnType<typeof loggedIn> => {
+    let exchanges = 0
+    return loggedIn({
+      '/apps/': (_url, init) =>
+        authorizationOf(init) === 'Bearer access-3'
+          ? json(APPS)
+          : json({}, 401),
+      '/auth/token_exchange': () => {
+        exchanges += 1
+        return json({
+          ...CREDENTIALS,
+          access_token: exchanges === 1 ? 'access-1' : 'access-3',
+          refresh_token: exchanges === 1 ? 'refresh-1' : 'refresh-3'
+        })
+      },
+      ...routes
+    })
+  }
+
+  it('leaves a session opened during a refresh alone, when the old token is then refused', async () => {
+    let answer: ((response: Response) => void) | null = null
+    const { sdk, fetchMock } = await relogin({
+      '/auth/access_token': () =>
+        new Promise<Response>(resolve => {
+          answer = resolve
+        })
+    })
+
+    const pending = sdk.fetch('/apps/')
+    pending.catch(() => null)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(answer).not.toBeNull()
+    sdk.logout()
+    await sdk.login('id-token-2')
+    expect(sdk.status).toBe('ready')
+    answer?.(json({ error: 'invalid_grant' }, 400))
+
+    await expect(pending).rejects.toThrow('access_token')
+    expect(sdk.status).toBe('ready')
+    expect((await sdk.fetch('/apps/')).status).toBe(200)
+    expect(requestsTo(fetchMock, '/auth/access_token')).toHaveLength(1)
+  })
+
+  it('stops the tries once the credentials changed', async () => {
+    const { sdk, fetchMock } = await relogin({
+      '/auth/access_token': () => {
+        throw new TypeError('cut')
+      }
+    })
+
+    const pending = sdk.fetch('/apps/')
+    pending.catch(() => null)
+    await vi.advanceTimersByTimeAsync(0)
+    sdk.logout()
+    await sdk.login('id-token-2')
+    await vi.advanceTimersByTimeAsync(3000)
+
+    await expect(pending).rejects.toThrow('cut')
+    expect(sdk.status).toBe('ready')
+    expect(requestsTo(fetchMock, '/auth/access_token')).toHaveLength(1)
+  })
+
+  it('gives up after three tries without an answer, keeping the credentials', async () => {
+    const { sdk, fetchMock } = await loggedIn({
+      '/apps/': () => json({}, 401),
+      '/auth/access_token': () => {
+        throw new TypeError('Failed to fetch')
+      }
+    })
+
+    const pending = sdk.fetch('/apps/')
+    pending.catch(() => null)
+    await vi.advanceTimersByTimeAsync(2000)
+
+    await expect(pending).rejects.toThrow('Failed to fetch')
+    expect(requestsTo(fetchMock, '/auth/access_token')).toHaveLength(3)
+    expect(sdk.status).toBe('ready')
   })
 
   it('fetchJSON rejects with the status of a failed request', async () => {
