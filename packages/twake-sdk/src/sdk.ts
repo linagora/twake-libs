@@ -135,6 +135,14 @@ interface FileAttributes {
   metadata?: { icon?: string; iconMimeType?: string }
 }
 
+// `btoa` takes Latin-1 only: the text goes through its UTF-8 bytes
+const base64 = (text: string): string =>
+  btoa(
+    Array.from(new TextEncoder().encode(text), byte =>
+      String.fromCharCode(byte)
+    ).join('')
+  )
+
 /**
  * Without an icon mime type the icon is a plain SVG, otherwise it comes from
  * the Iconizer API already in base64
@@ -143,7 +151,7 @@ const shortcutIcon = ({ metadata }: FileAttributes): string | null => {
   if (!metadata?.icon) return null
   return metadata.iconMimeType
     ? `data:${metadata.iconMimeType};base64,${metadata.icon}`
-    : `data:image/svg+xml;base64,${btoa(metadata.icon)}`
+    : `data:image/svg+xml;base64,${base64(metadata.icon)}`
 }
 
 interface DiskUsageAttributes {
@@ -401,7 +409,7 @@ export function createSdk(options: SdkOptions): Sdk {
       const files = included.filter(
         file => file.attributes.class === 'shortcut'
       )
-      return Promise.all(
+      const shortcuts = await Promise.all(
         files.map(async file => {
           const { data } = await fetchJSON<
             JsonApiResponse<JsonApiDoc<{ name: string; url: string }>>
@@ -414,6 +422,8 @@ export function createSdk(options: SdkOptions): Sdk {
           }
         })
       )
+      // A shortcut file holds any text: the web ones are listed
+      return shortcuts.filter(shortcut => isHttpURL(shortcut.url))
     })
 
   const getAppIconURL = (slug: string): Promise<string> => {
