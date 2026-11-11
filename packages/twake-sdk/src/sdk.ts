@@ -235,9 +235,16 @@ export function createSdk(options: SdkOptions): Sdk {
     init: RequestInit,
     token: string
   ): Promise<Response> => {
+    const url = new URL(path, platformURL)
+    // The token is for the platform only
+    if (url.origin !== new URL(platformURL).origin) {
+      return Promise.reject(
+        new Error('[twake-sdk] the request leaves the platform')
+      )
+    }
     const headers = new Headers(init.headers)
     headers.set('Authorization', `Bearer ${token}`)
-    return fetch(new URL(path, platformURL), { ...init, headers })
+    return fetch(url, { ...init, headers })
   }
 
   const sdkFetch = async (
