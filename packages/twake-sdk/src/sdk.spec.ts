@@ -282,6 +282,20 @@ describe('platform data', () => {
               }
             },
             {
+              id: 'shortcut-2',
+              type: 'io.cozy.files',
+              attributes: {
+                name: 'Notes.url',
+                class: 'shortcut',
+                metadata: { icon: '<svg>Été</svg>' }
+              }
+            },
+            {
+              id: 'shortcut-3',
+              type: 'io.cozy.files',
+              attributes: { name: 'Script.url', class: 'shortcut' }
+            },
+            {
               id: 'note-1',
               type: 'io.cozy.files',
               attributes: { name: 'Note.md', class: 'text' }
@@ -295,17 +309,39 @@ describe('platform data', () => {
             type: 'io.cozy.files.shortcuts',
             attributes: { name: 'Docs.url', url: 'https://docs.example' }
           }
+        }),
+      '/shortcuts/shortcut-2': () =>
+        json({
+          data: {
+            id: 'shortcut-2',
+            type: 'io.cozy.files.shortcuts',
+            attributes: { name: 'Notes.url', url: 'http://notes.example' }
+          }
+        }),
+      '/shortcuts/shortcut-3': () =>
+        json({
+          data: {
+            id: 'shortcut-3',
+            type: 'io.cozy.files.shortcuts',
+            attributes: { name: 'Script.url', url: 'javascript:alert(1)' }
+          }
         })
     })
 
-    await expect(sdk.getShortcuts()).resolves.toEqual([
-      {
-        id: 'shortcut-1',
-        name: 'Docs.url',
-        url: 'https://docs.example',
-        icon: 'data:image/png;base64,aWNvbg=='
-      }
+    const shortcuts = await sdk.getShortcuts()
+    expect(shortcuts.map(({ icon, ...rest }) => rest)).toEqual([
+      { id: 'shortcut-1', name: 'Docs.url', url: 'https://docs.example' },
+      { id: 'shortcut-2', name: 'Notes.url', url: 'http://notes.example' }
     ])
+    expect(shortcuts[0]?.icon).toBe('data:image/png;base64,aWNvbg==')
+    // The SVG, beyond Latin-1, comes back from its UTF-8 bytes
+    const [prefix, encoded] = shortcuts[1]?.icon?.split(',') ?? []
+    expect(prefix).toBe('data:image/svg+xml;base64')
+    expect(
+      new TextDecoder().decode(
+        Uint8Array.from(atob(encoded ?? ''), char => char.charCodeAt(0))
+      )
+    ).toBe('<svg>Été</svg>')
 
     const { sdk: withoutHome } = await loggedIn({})
     await expect(withoutHome.getShortcuts()).resolves.toEqual([])
