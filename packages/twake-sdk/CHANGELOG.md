@@ -1,3 +1,10 @@
+## @linagora/twake-sdk [1.3.1](https://github.com/linagora/twake-libs/compare/@linagora/twake-sdk@1.3.0...@linagora/twake-sdk@1.3.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* **twake-sdk:** Try a token refresh again when it fails without a refusal ([ddcf7a4](https://github.com/linagora/twake-libs/commit/ddcf7a43e220d1c3c0b71dbb47b39bb190acf54f))
+
 # @linagora/twake-sdk [1.3.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-sdk@1.2.0...@linagora/twake-sdk@1.3.0) (2026-11-12)
 
 
