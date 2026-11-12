@@ -1,3 +1,10 @@
+## @linagora/twake-sdk [1.3.2](https://github.com/linagora/twake-libs/compare/@linagora/twake-sdk@1.3.1...@linagora/twake-sdk@1.3.2) (2026-11-12)
+
+
+### Bug Fixes
+
+* **twake-sdk:** Keep http(s) shortcuts only and encode their SVG icons as UTF-8 ([23a923a](https://github.com/linagora/twake-libs/commit/23a923a4aa7f6755fa6398eb348d61155cec760c))
+
 ## @linagora/twake-sdk [1.3.1](https://github.com/linagora/twake-libs/compare/@linagora/twake-sdk@1.3.0...@linagora/twake-sdk@1.3.1) (2026-11-12)
 
 
