@@ -1,3 +1,15 @@
+# @linagora/twake-sdk [1.3.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-sdk@1.2.0...@linagora/twake-sdk@1.3.0) (2026-11-12)
+
+
+### Bug Fixes
+
+* **twake-sdk:** Keep the requests on the platform ([d6cc6f2](https://github.com/linagora/twake-libs/commit/d6cc6f27ff0120dc7bae21a75fd738e87a355812))
+
+
+### Features
+
+* **twake-sdk:** Expose a stack client for the libraries of cozy-client ([963e89e](https://github.com/linagora/twake-libs/commit/963e89ed69b95ce903bc14fb192663e4f486cfae))
+
 # @linagora/twake-sdk [1.2.0](https://github.com/linagora/twake-libs/compare/@linagora/twake-sdk@1.1.0...@linagora/twake-sdk@1.2.0) (2026-10-29)
 
 
