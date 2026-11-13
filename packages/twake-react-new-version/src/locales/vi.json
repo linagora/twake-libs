@@ -1,0 +1,8 @@
+{
+  "twakeNewVersion": {
+    "title": "Đã có phiên bản mới",
+    "body": "Tải lại trang để dùng phiên bản mới nhất của %{appName}.",
+    "reload": "Tải lại",
+    "notNow": "Để sau"
+  }
+}
