@@ -13,6 +13,7 @@ twake-libs/
 │   ├── twake-node-server/  # HTTP server, shutdown and Postgres for Node backends
 │   ├── twake-node-telemetry/ # Logs and Sentry for Node backends
 │   ├── twake-oidc/         # SSO sign-in and session
+│   ├── twake-react-new-version/ # "New version available" dialog
 │   ├── twake-utils/        # Shared utils
 │   └── ...                 # Other packages (to be added)
 ├── package.json            # Root workspace config
