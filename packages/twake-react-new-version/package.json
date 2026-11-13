@@ -1,7 +1,7 @@
 {
   "name": "@linagora/twake-react-new-version",
   "type": "module",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Tells the user of a Twake application that a new version is served, and offers a reload",
   "author": "Twake",
   "license": "MIT",
