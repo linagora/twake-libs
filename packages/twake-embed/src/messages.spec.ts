@@ -31,6 +31,27 @@ describe('parseAppMessage', () => {
       parseAppMessage({ type: 'twake-embed:path', resourceId: 'p1', path: 'b' })
     ).toBeNull()
     expect(
+      parseAppMessage({
+        type: 'twake-embed:path',
+        resourceId: 'p1',
+        path: '/../p2'
+      })
+    ).toBeNull()
+    expect(
+      parseAppMessage({
+        type: 'twake-embed:path',
+        resourceId: 'p1',
+        path: '/.\n./p2'
+      })
+    ).toBeNull()
+    expect(
+      parseAppMessage({
+        type: 'twake-embed:path',
+        resourceId: 'p1',
+        path: '/.. '
+      })
+    ).toBeNull()
+    expect(
       parseAppMessage({ type: 'twake-embed:path', resourceId: '', path: '/b' })
     ).toBeNull()
     expect(parseAppMessage({ type: 'twake-embed:path', path: '/b' })).toBeNull()
