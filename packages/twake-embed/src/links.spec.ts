@@ -58,6 +58,7 @@ function connect(
   window.history.replaceState(null, '', '/embed/projects/p1/inbox')
   const space = connectToTwakeSpace({
     embedPrefix: PREFIX,
+    hostOrigins: ['https://space.test'],
     parent: { postMessage: vi.fn() } as unknown as Window,
     ...options
   })
@@ -246,6 +247,7 @@ describe('links leaving the frame', () => {
       window.history.replaceState(null, '', '/#/embed/projects/p1/inbox')
       space = connectToTwakeSpace({
         embedPrefix: PREFIX,
+        hostOrigins: ['https://space.test'],
         hashRouting: true,
         parent: { postMessage: vi.fn() } as unknown as Window
       })
