@@ -1,6 +1,6 @@
-import { Alert, Button, Snackbar } from '@linagora/twake-mui'
 import React from 'react'
 
+import { Alert, Button, Snackbar } from '@linagora/twake-mui'
 import { useI18n } from 'twake-i18n'
 
 export function WebSocketStatusSnackbar({
