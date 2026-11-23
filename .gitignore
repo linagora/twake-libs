@@ -39,5 +39,7 @@ lerna-debug.log*
 *.tmp
 *.temp
 .opencode
-docs/
+*/**/docs/
 !packages/*/docs/
+/docs/*
+!/docs/decisions.md
