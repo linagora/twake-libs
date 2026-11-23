@@ -99,4 +99,72 @@ describe('useWebSocketConnection', () => {
     })
     expect(mockEstablish).toHaveBeenCalledTimes(1)
   })
+  describe('browser online/offline events', () => {
+    const closeAbnormally = (): void => {
+      act(() => {
+        callbacks.onClose?.(new CloseEvent('close', { code: 1006 }))
+      })
+    }
+
+    it('reconnects at once when the browser goes online', async () => {
+      renderConnection()
+      await act(async () => {})
+      closeAbnormally()
+
+      act(() => {
+        window.dispatchEvent(new Event('online'))
+      })
+      expect(mockEstablish).toHaveBeenCalledTimes(2)
+    })
+
+    it('stops reconnecting while the browser is offline', async () => {
+      renderConnection()
+      await act(async () => {})
+      closeAbnormally()
+
+      act(() => {
+        window.dispatchEvent(new Event('offline'))
+      })
+      act(() => {
+        vi.advanceTimersByTime(10_000)
+      })
+      expect(mockEstablish).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not reconnect when online fires on an open socket', async () => {
+      renderConnection()
+      await act(async () => {})
+      act(() => setIsSocketOpen(true))
+
+      act(() => {
+        window.dispatchEvent(new Event('online'))
+      })
+      expect(mockEstablish).toHaveBeenCalledTimes(1)
+    })
+
+    it('resets the reconnection attempts when the browser goes online', async () => {
+      const info = vi.spyOn(console, 'info').mockImplementation(() => {})
+      renderConnection()
+      await act(async () => {})
+
+      closeAbnormally()
+      await act(async () => {
+        // Past the first retry, before the 10 s connection timeout
+        await vi.advanceTimersByTimeAsync(2_000)
+      })
+      closeAbnormally()
+      expect(info).toHaveBeenLastCalledWith(
+        expect.stringContaining('(attempt 2/10)')
+      )
+
+      act(() => {
+        window.dispatchEvent(new Event('offline'))
+        window.dispatchEvent(new Event('online'))
+      })
+      closeAbnormally()
+      expect(info).toHaveBeenLastCalledWith(
+        expect.stringContaining('(attempt 1/10)')
+      )
+    })
+  })
 })
