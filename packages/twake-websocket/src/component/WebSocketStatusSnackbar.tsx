@@ -23,11 +23,12 @@ export function WebSocketStatusSnackbar({
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
     >
       <Alert
+        variant="filled"
         severity={severity}
         onClose={onClose}
         sx={{ width: '100%' }}
         action={
-          <Button color="inherit" size="small" onClick={onClose}>
+          <Button variant="text" color="inherit" size="small" onClick={onClose}>
             {t('common.ok')}
           </Button>
         }
