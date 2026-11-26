@@ -11,14 +11,42 @@ export interface EmbedLocation {
 }
 
 /**
- * Whether `path` has the shape of a path below an embed route. A double slash
- * or a backslash in its pathname is refused: a router may read them as
- * another host or collapse them above the route.
+ * Whether `path` has the shape of a path below an embed route: '' or a path
+ * starting with '/', '?' or '#' that stays below the route once a URL parser
+ * resolves it. The parser drops a trailing space or control and reads `..` in
+ * every encoding, so resolving covers them. An encoded slash or backslash
+ * (`%2f`, `%5c`) is refused in the pathname, as a router may decode them
+ * before it resolves; so are a backslash, and a tab or a newline, which the
+ * parser drops and which could so hide an encoding; and a double slash,
+ * which a router may read as another host.
  */
 export function isBelow(path: string): boolean {
   if (!/^([/?#]|$)/.test(path)) return false
   const pathname = path.split(/[?#]/, 1)[0] ?? ''
-  return !pathname.includes('//') && !pathname.includes('\\')
+  if (/[\t\n\r\\]|%2f|%5c/i.test(pathname)) return false
+  // The whole path, and the pathname alone without its parameters (`..;x`),
+  // as a server that drops them or a host that resolves only the pathname
+  // would read it
+  return [path, pathname.replace(/;[^/]*/g, '')].every(staysBelowRoot)
+}
+
+/**
+ * Resolved as a URL below two roots, the path must stay below both: a `..`
+ * that climbs out of one lands at the same place from the other, so nothing
+ * brings it back below both
+ */
+function staysBelowRoot(path: string): boolean {
+  return ['/a', '/b'].every(root => {
+    let url: URL
+    try {
+      url = new URL(`https://embed.invalid${root}${path}`)
+    } catch {
+      return false
+    }
+    if (!url.pathname.startsWith(root)) return false
+    const below = url.pathname.slice(root.length)
+    return (below === '' || below.startsWith('/')) && !below.includes('//')
+  })
 }
 
 /** The embed route of a resource under `prefix` ('/embed/projects/') */
