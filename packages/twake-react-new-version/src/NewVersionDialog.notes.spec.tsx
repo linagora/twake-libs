@@ -51,23 +51,22 @@ const open = async (
 
 describe('NewVersionDialog buttons', () => {
   it('« Not now » is a text button, « Reload » stays contained', async () => {
-    await open('b2')
+    const { d } = await open('b2')
 
-    const notNow = screen.getByTestId('new-version-not-now')
+    const notNow = within(d).getByRole('button', { name: 'Not now' })
     expect(notNow).toHaveClass('MuiButton-text')
     expect(notNow).not.toHaveClass('MuiButton-outlined')
-    expect(screen.getByTestId('new-version-reload')).toHaveClass(
+    expect(within(d).getByRole('button', { name: 'Reload' })).toHaveClass(
       'MuiButton-contained'
     )
   })
 
   it('keeps both buttons centred', async () => {
-    await open('b2')
+    const { d } = await open('b2')
 
-    const notNow = screen.getByTestId('new-version-not-now')
-    expect(notNow.parentElement).toBe(
-      screen.getByTestId('new-version-reload').parentElement
-    )
+    const notNow = within(d).getByRole('button', { name: 'Not now' })
+    const reload = within(d).getByRole('button', { name: 'Reload' })
+    expect(notNow.parentElement).toBe(reload.parentElement)
     expect(notNow.parentElement).toHaveStyle({ justifyContent: 'center' })
   })
 })
