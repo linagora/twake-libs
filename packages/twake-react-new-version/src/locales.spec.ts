@@ -30,6 +30,7 @@ it.each(texts)('%s has every text, naming the app', (_, locale) => {
   )
   Object.values(twakeNewVersion).forEach(text => expect(text).not.toBe(''))
   expect(twakeNewVersion.title).toContain('%{appName}')
+  expect(Object.keys(twakeNewVersion)).toContain('notNow')
   expect(typeof twakeNewVersion.body).toBe('string')
   expect(twakeNewVersion.body.length).toBeGreaterThan(0)
 })

@@ -14,13 +14,15 @@ const renderDialog = ({
   lang = 'en',
   intervalMs,
   image,
-  imageBackground
+  imageBackground,
+  isWide
 }: {
   served?: string | null
   lang?: string
   intervalMs?: number
   image?: string
   imageBackground?: string
+  isWide?: boolean
 } = {}): {
   fetchServed: ReturnType<typeof vi.fn>
   reload: ReturnType<typeof vi.fn>
@@ -38,6 +40,7 @@ const renderDialog = ({
           intervalMs={intervalMs}
           image={image}
           imageBackground={imageBackground}
+          isWide={isWide}
         />
       </I18n>
     </TwakeMuiThemeProvider>
@@ -156,6 +159,21 @@ describe('NewVersionDialog', () => {
     expect(dialog()).toBe(null)
   })
 
+  it('a click outside declines the build like « Not now »', async () => {
+    renderDialog()
+    await check()
+    await screen.findByRole('dialog')
+
+    // Outside the paper: the area around it, over the backdrop
+    const outside = document.querySelector('.MuiDialog-container')
+    expect(outside).not.toBe(null)
+    await userEvent.click(outside as HTMLElement)
+    await waitFor(() => expect(dialog()).toBe(null))
+    await check()
+
+    expect(dialog()).toBe(null)
+  })
+
   it('checks on its own every interval', async () => {
     vi.useFakeTimers()
     const { fetchServed } = renderDialog({ intervalMs: 1000 })
@@ -266,7 +284,10 @@ describe('NewVersionDialog', () => {
     expect(fr).not.toHaveTextContent('%{appName}')
     expect(fr).not.toHaveTextContent('An update just arrived')
     expect(
-      screen.getByRole('button', { name: 'Pas maintenant' })
+      within(fr).getByRole('button', { name: 'Recharger' })
+    ).toBeInTheDocument()
+    expect(
+      within(fr).getByRole('button', { name: 'Pas maintenant' })
     ).toBeInTheDocument()
   })
 
@@ -342,14 +363,53 @@ describe('NewVersionDialog look', () => {
   it('centres the buttons, « Not now » before « Reload »', async () => {
     const d = await open()
 
-    const notNow = screen.getByTestId('new-version-not-now')
-    const reloadButton = screen.getByTestId('new-version-reload')
+    const notNow = within(d).getByRole('button', { name: 'Not now' })
+    const reloadButton = within(d).getByRole('button', { name: 'Reload' })
+    expect(within(d).getAllByRole('button')).toEqual([notNow, reloadButton])
     expect(notNow.parentElement).toBe(reloadButton.parentElement)
     expect(notNow.parentElement).toHaveStyle({ justifyContent: 'center' })
-    expect(
-      notNow.compareDocumentPosition(reloadButton) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy()
-    expect(d).toContainElement(notNow)
+    expect(screen.getByTestId('new-version-not-now')).toBe(notNow)
+  })
+
+  it('keeps the width of a small dialog by default: up to 480 px', async () => {
+    const d = await open()
+
+    expect(getComputedStyle(d).maxWidth).toBe('480px')
+  })
+
+  it('is 1.5 times as wide as a small dialog when wide: up to 720 px', async () => {
+    const d = await open({ isWide: true })
+
+    expect(getComputedStyle(d).maxWidth).toBe('720px')
+  })
+
+  it('keeps « Not now » before « Reload » when wide: the user can always decline', async () => {
+    const d = await open({ isWide: true })
+
+    expect(within(d).getAllByRole('button')).toEqual([
+      within(d).getByRole('button', { name: 'Not now' }),
+      within(d).getByRole('button', { name: 'Reload' })
+    ])
+  })
+
+  it.each([
+    ['by default', {}],
+    ['when wide', { isWide: true }]
+  ])('stays a dialog on a phone, not a full screen, %s', async (_, options) => {
+    const desktop = window.matchMedia.bind(window)
+    // A phone: the max-width queries of the theme's breakpoints match
+    const phone = vi
+      .spyOn(window, 'matchMedia')
+      .mockImplementation((query: string) => ({
+        ...desktop(query),
+        matches: query.includes('max-width')
+      }))
+    try {
+      const d = await open(options)
+
+      expect(d).not.toHaveClass('MuiDialog-paperFullScreen')
+    } finally {
+      phone.mockRestore()
+    }
   })
 })
