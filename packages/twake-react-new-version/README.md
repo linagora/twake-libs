@@ -55,7 +55,9 @@ Every 10 minutes, when the tab gets the focus, becomes visible again or comes ba
 
 ### What the user sees
 
-A dialog titled « What's new in <appName> », with the text « An update just arrived. Reload to get it. », centred, and « Not now » (a text button) and « Reload » side by side, centred. With `image`, a banner above the title shows the illustration. « Not now », Escape or a click outside decline that build for the life of the tab: the dialog comes back only for a build not declined yet, so a rollback to a declined build is not offered again.
+A dialog titled « What's new in <appName> », with the text « An update just arrived. Reload to get it. », centred, and « Not now » (a text button) and « Reload » side by side, centred. It is the `small` dialog of twake-mui, 480 px at most. With `image`, a banner above the title shows the illustration. « Not now », Escape or a click outside decline that build for the life of the tab: the dialog comes back only for a build not declined yet, so a rollback to a declined build is not offered again.
+
+With `isWide`, the dialog is 720 px wide at most; on a phone it keeps the margins of `small` and never goes full screen.
 
 ### Patch notes
 
@@ -78,6 +80,7 @@ The browser remembers the notes it has shown, in either dialog, in `localStorage
 - `imageBackground`: CSS colour of the banner, the theme's light primary colour by default (light and dark)
 - `seenNotesKey`: a key of the app, such as `twake-mail`, that turns on the notes at load; nothing is read at mount without it
 - `notesUrl`: where to read every change, such as the release announcement; a link under the notes, none without it
+- `isWide`: true widens the dialog to 720 px at most instead of 480 px, still the `small` dialog of twake-mui; false by default
 
 ### Texts
 

@@ -59,6 +59,8 @@ export interface NewVersionDialogProps {
    * all what's new » link under the notes, opened in a new tab
    */
   notesUrl?: string
+  /** True widens the dialog to 720 px at most instead of the 480 px of `small`. False by default */
+  isWide?: boolean
 }
 
 /**
@@ -166,8 +168,8 @@ const Banner = ({
  * that build for the life of the tab: the dialog comes back only for a build
  * not declined yet. With `seenNotesKey`, it also shows at load the notes of
  * the running build the user has not seen, and remembers them as seen once
- * shown in either dialog. Mount it once, under the app's `I18n` and twake-mui
- * theme
+ * shown in either dialog. `isWide` widens the dialog to 720 px. Mount it
+ * once, under the app's `I18n` and twake-mui theme
  */
 export const NewVersionDialog = ({
   running,
@@ -178,7 +180,8 @@ export const NewVersionDialog = ({
   image,
   imageBackground,
   seenNotesKey,
-  notesUrl
+  notesUrl,
+  isWide = false
 }: NewVersionDialogProps): React.ReactElement => {
   const { t, lang } = useI18n()
   useExtendI18n({ [lang]: locales[lang] ?? locales.en })
@@ -262,6 +265,10 @@ export const NewVersionDialog = ({
       open={offered !== null || notes !== null}
       onClose={offered !== null ? notNow : closeNotes}
       size="small"
+      // Still `small` (its phone margins), only its 480 px cap is raised
+      slotProps={
+        isWide ? { paper: { sx: { '&.small': { maxWidth: 720 } } } } : undefined
+      }
       aria-labelledby={titleId}
       data-testid="new-version-dialog"
     >

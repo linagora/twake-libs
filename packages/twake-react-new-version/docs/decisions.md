@@ -31,3 +31,10 @@ Categories: UX, UI, Product, Architecture, Infra, Tech.
 - Decided by: Crash-- (CTO), 2026-11-25
 - Why: the dialog keeps a few lines; the full list lives elsewhere.
 - Scope: every app that passes `notesUrl`.
+
+## 2026-11-25, [UI] A 720 px dialog is opt-in; « Not now » always shows
+
+- Decision: by default the « new version » dialog stays the `small` dialog of `@linagora/twake-mui` (480 px). `isWide` widens it to 720 px at most, still `small` (its phone margins, never full screen). « Not now » always shows: no app may hide it.
+- Decided by: Clément Guyon and Crash-- (CTO), 2026-11-26, on [linagora/twake-libs#93](https://github.com/linagora/twake-libs/pull/93)
+- Why: Twake Chat wants a wider dialog for its notes. The user must stay free to decline, during a large upload for instance; an app that needs everyone on the same version finds another way.
+- Scope: apps that set `isWide`; the others are unchanged.
