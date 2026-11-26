@@ -48,7 +48,7 @@ export interface WebSocketConnection {
   isOpen: boolean
   /** Incremented on every successful (re)connection. */
   epoch: number
-  /** Last socket error, raw. Translate at render time. */
+  /** Last socket error, raw, cleared once the socket is open again. Translate at render time. */
   error: Event | null
   clearError: () => void
   /** Reset backoff and force a new connection attempt. */
@@ -151,13 +151,15 @@ export function useWebSocketConnection({
     setShouldConnect(previous => !previous)
   }, [clearReconnectTimeout])
 
-  // Reset backoff on successful connection
+  // Reset backoff on successful connection. The error of a failed attempt is
+  // over once the socket is open again.
   useEffect(() => {
     if (!isOpen) return
     clearConnectTimeout()
     didConnectTimeoutRef.current = false
     reconnectAttemptsRef.current = 0
     clearReconnectTimeout()
+    setError(null)
   }, [isOpen, clearConnectTimeout, clearReconnectTimeout])
 
   // Connection lifecycle
@@ -255,6 +257,19 @@ export function useWebSocketConnection({
       window.removeEventListener('offline', handleOffline)
     }
   }, [reconnect, clearReconnectTimeout, clearConnectTimeout, setIsSocketOpen])
+
+  // A sleeping tab (laptop lid closed, mobile app in background) loses its
+  // socket and may use up its reconnection attempts: start again on wake-up.
+  useEffect(() => {
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState !== 'visible') return
+      if (!isOpenRef.current && enabledRef.current) reconnect()
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return (): void => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [reconnect])
 
   // Ping / dead-connection detection
   useEffect(() => {

@@ -7,3 +7,7 @@ export type { RetryBackoffConfig } from '../utils/getRetryDelay'
 export { useWebSocket } from './useWebSocket'
 export type { UseWebSocketOptions, UseWebSocketResult } from './useWebSocket'
 export { useWebSocketConnection } from './useWebSocketConnection'
+export type {
+  UseWebSocketConnectionOptions,
+  WebSocketConnection
+} from './useWebSocketConnection'
